@@ -20,7 +20,7 @@ void setup() {
   // put your setup code here, to run once:
   pinMode(motorSwitchPin1, OUTPUT);
   pinMode(motorSwitchPin2, OUTPUT);
-
+  
   pinMode(motorVoltagePin1, OUTPUT);
   pinMode(motorVoltagePin2, OUTPUT);
 
