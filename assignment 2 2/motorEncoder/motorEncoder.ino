@@ -16,6 +16,8 @@ int motorEncoderRightB = 5;
 // motor turn off
 int motorTogglePin = 4;
 
+int stupidLEDPin = 13;
+
 // encoder variables
 int thisRightA = LOW;
 int lastRightA = LOW;
@@ -34,20 +36,19 @@ double leftRPM = 0;
 double rightRPM = 0;
 
 void setUpTimer1Interrupt() {
-  cli();
-  //set timer1 interrupt at 1Hz
+  cli();//stop interrupts
   TCCR1A = 0;// set entire TCCR1A register to 0
   TCCR1B = 0;// same for TCCR1B
   TCNT1  = 0;//initialize counter value to 0
   // set compare match register for 1hz increments
-  OCR1A = 1000;// = (16*10^6) / (1*1024) - 1 (must be <65536)
+  OCR1A = 15624;// = (16*10^6) / (1*1024) - 1 (must be <65536)
   // turn on CTC mode
   TCCR1B |= (1 << WGM12);
   // Set CS12 and CS10 bits for 1024 prescaler
   TCCR1B |= (1 << CS12) | (1 << CS10);  
   // enable timer compare interrupt
   TIMSK1 |= (1 << OCIE1A);
-  sei();
+  sei();//allow interrupts
 }
 
 void setup() {
@@ -59,6 +60,8 @@ void setup() {
   pinMode(motorVoltagePin2, OUTPUT);
 
   pinMode(motorTogglePin, OUTPUT);
+
+  pinMode(stupidLEDPin, OUTPUT);
 
   // set up the interrupt for timer1 (see below)
   setUpTimer1Interrupt();
@@ -75,6 +78,28 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(motorEncoderRightA), rightPinInterrupt, CHANGE);
 }
 
+int toggle1 = 0;
+
+ISR(TIMER1_COMPA_vect){
+  // leftRPM = ((double)(leftCount - leftLastCount));
+  // rightRPM = ((double)(rightCount - rightLastCount));
+
+  // leftLastCount = leftCount;
+  // rightLastCount = rightCount;
+
+  //generates pulse wave of frequency 1Hz/2 = 0.5kHz (takes two cycles for full wave- toggle high then toggle low)
+  //generates pulse wave of frequency 1Hz/2 = 0.5kHz (takes two cycles for full wave- toggle high then toggle low)
+  if (toggle1){
+    digitalWrite(stupidLEDPin,HIGH);
+    toggle1 = 0;
+  }
+  else{
+    digitalWrite(stupidLEDPin,LOW);
+    toggle1 = 1;
+  }
+  Serial.println(toggle1);
+}
+
 int state = 1;
 
 void loop() {
@@ -84,7 +109,7 @@ void loop() {
     analogWrite(motorVoltagePin1, fadeValue);
     // wait for 30 milliseconds to see the dimming effect
     delay(30);
-    Serial.println("Left speed: " + (String)leftRPM + " RPM, right speed: " + (String)rightRPM + " RPM");
+    // Serial.println("Left speed: " + (String)leftRPM + " RPM, right speed: " + (String)rightRPM + " RPM");
   }
 
   // fade out from max to min in increments of 5 points:
@@ -93,7 +118,7 @@ void loop() {
     analogWrite(motorVoltagePin1, fadeValue);
     // wait for 30 milliseconds to see the dimming effect
     delay(30);
-    Serial.println("Left speed: " + (String)leftRPM + " RPM, right speed: " + (String)rightRPM + " RPM");
+    // Serial.println("Left speed: " + (String)leftRPM + " RPM, right speed: " + (String)rightRPM + " RPM");
   }
 
   if (state == 0) {
@@ -168,11 +193,3 @@ void rightCounterClockwise() {
   // Serial.println(rightCount);
 }
 
-ISR(TIMER1_COMPA_vect){
-  leftRPM = ((double)(leftCount - leftLastCount));
-  rightRPM = ((double)(rightCount - rightLastCount));
-
-  leftLastCount = leftCount;
-  rightLastCount = rightCount;
-
-}
