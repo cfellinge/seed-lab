@@ -52,34 +52,3 @@ void loop() {
     delay(30);
   }
 }
-
-int thisA;
-
-void aPinInterrupt() {
-  thisA = digitalRead(motorEncoderAHigh);
-
-  if (thisA == HIGH && lastA == LOW) {
-    // logic for CW and CCW rotations
-    if (digitalRead(BPIN) == HIGH) {
-      clockwise();
-    }
-    else {
-      counterClockwise();
-    }
-  }
-
-  // save current state of A
-  lastA = thisA;
-}
-
-void clockwise() {
-  count += 4;
-  Serial.print("CW ");
-  Serial.println(count);
-}
-
-void counterClockwise() {
-  count -= 4;
-  Serial.print("CCW ");
-  Serial.println(count);
-}
