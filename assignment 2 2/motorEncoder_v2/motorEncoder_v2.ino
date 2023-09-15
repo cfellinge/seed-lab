@@ -55,6 +55,9 @@ static double encoderCountsPerRotation = 800.0;
 boolean clockLEDState = LOW;
 
 
+// misc variables
+int secondsSinceStartup = 0;
+
 
 
 ISR(TIMER2_COMPA_vect)
@@ -130,31 +133,37 @@ void loop()
 
     }
 
-    // do every second
+    // debugging statements for every second
     if (count % 100 == 0)
     {
-      Serial.println("1 second has passed");
+      // Serial.println("1 second has passed");
       // Serial.println("Left count: " + (String)leftCount + ", Right count: " + (String)rightCount);
+      Serial.println("Seconds passed: " + (String)secondsSinceStartup);
+      Serial.println("Left RPM: " + (String)leftRPM + ", Right RPM: " + (String)rightRPM);
+      Serial.println("Left Voltage: " + (String)((double)leftRPMSet/255.0*8.0) + ", Right Voltage: " + (String)((double)rightRPMSet/255.0*8.0));
     }
 
-    // do every second but delayed
-    if (count % 100 == 10)
+    // controls for every second
+    if (count % 100 == 0)
     {
       leftRPM = calculateRPM(leftCount, leftLastCount, 1000);
       leftLastCount = leftCount;
 
       rightRPM = calculateRPM(rightCount, rightLastCount, 1000);
       rightLastCount = rightCount;
-      Serial.println("Left RPM: " + (String)leftRPM + ", Right RPM: " + (String)rightRPM);
+
+      secondsSinceStartup++;
     }
 
     // do every 10 seconds
     if (count == 1000)
     {
       count = 0;
-      Serial.println("10 seconds have passed");
+
+      
+      // Serial.println("10 seconds have passed");
       leftRPMTarget = random(0, 100);
-      Serial.println("RPM Targets: " + (String)leftRPMTarget);
+      Serial.println("RPM Targets set: " + (String)leftRPMTarget);
     }
 
     lastCount = count;
