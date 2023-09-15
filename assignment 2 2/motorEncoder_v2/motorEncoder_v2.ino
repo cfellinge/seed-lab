@@ -40,8 +40,6 @@ int rightLastCount = 0;
 
 double leftRPM = 0;
 double rightRPM = 0;
-double leftMetersPerSecond = 0;
-double rightMetersPerSecond = 0;
 
 // speed control variables
 int leftRPMTarget = 0;
@@ -101,7 +99,7 @@ void setup()
   digitalWrite(motorTogglePin, HIGH);
 
   digitalWrite(motorSwitchPin1, HIGH);
-  digitalWrite(motorSwitchPin2, HIGH);
+  digitalWrite(motorSwitchPin2, LOW);
 }
 
 void loop()
@@ -142,7 +140,6 @@ void loop()
       // Serial.println("Left count: " + (String)leftCount + ", Right count: " + (String)rightCount);
       Serial.println("Seconds passed: " + (String)secondsSinceStartup);
       Serial.println("Left RPM: " + (String)leftRPM + ", Right RPM: " + (String)rightRPM);
-      Serial.println("Left m/s: " + (String)leftMetersPerSecond + ", Right m/s: " + (String)rightMetersPerSecond);
       Serial.println("Left Voltage: " + (String)((double)leftRPMSet/255.0*8.0) + ", Right Voltage: " + (String)((double)rightRPMSet/255.0*8.0));
     }
 
@@ -150,11 +147,9 @@ void loop()
     if (count % 100 == 0)
     {
       leftRPM = calculateRPM(leftCount, leftLastCount, 1000);
-      leftMetersPerSecond = calculateMetersPerSecond(leftCount, leftLastCount, 1000);
       leftLastCount = leftCount;
 
       rightRPM = calculateRPM(rightCount, rightLastCount, 1000);
-      rightMetersPerSecond = calculateMetersPerSecond(rightCount, rightLastCount, 1000);
       rightLastCount = rightCount;
 
       secondsSinceStartup++;
@@ -178,14 +173,7 @@ void loop()
 double calculateRPM(int countsRotated, int lastCountsRotated, int numMilliSeconds)
 {
   double numRotations = (double)(countsRotated - lastCountsRotated) / encoderCountsPerRotation;
-  return numRotations * (numMilliSeconds / 1000.0) * 60.0;  //RETURN THIS FOR RPM VALUE
-}
-
-double calculateMetersPerSecond(int countsRotated, int lastCountsRotated, int numMilliSeconds)
-{
-  double numRotations = (double)(countsRotated - lastCountsRotated) / encoderCountsPerRotation;
-  numRotations = numRotations * (numMilliSeconds / 1000.0) * 60.0;  //RETURN THIS FOR RPM VALUE
-  return numRotations * 0.00764; //THIS IS M/S USING A WHEEL DIAMETER OF 14.6 CM, CAN BE CHANGED
+  return numRotations * (numMilliSeconds / 1000.0) * 60.0;
 }
 
 void flash()
