@@ -7,48 +7,51 @@
 
 #include "Arduino.h"
 
-class MotorControl {
-    public:
-        MotorControl(int pin);
-        
-        void begin();
-        void setSpeed(double leftSpeed, double rightSpeed);
-        
-        double getLeftSpeed();
-        double getRightSpeed();
+class MotorControl
+{
+public:
+    MotorControl(int pin);
 
-        int leftPinInterrupt();
-        int rightPinInterrupt();
+    void begin();
 
-        void printFive();
-    private:
-        int clockwise(int motorCount);
-        int counterClockwise(int motorCount);
+    double getLeftVelocity();
+    double getRightVelocity();
 
-        // h bridge control pins
-        int _togglePin;
+    int getLeftCount();
+    int getRightCount();
 
-        int _leftVoltagePin;
-        int _rightVoltagePin;
+    void setVelocities(double targetLeftVelocity, double targetRightVelocity);
 
-        int _switchForwardsPin;
-        int _switchBackwardsPin;
+    int leftPinInterrupt();
+    int rightPinInterrupt();
 
-        int _leftEncoderAPin;
-        int _leftEncoderBPin;
+    void updateMotorValues(int millisecondInterval);
+    double calculateMetersPerSecond(int countsRotated, int lastCountsRotated, int numMilliSeconds);
 
-        int _rightEncoderAPin;
-        int _rightEncoderBPin;
+    void printFive();
 
-        // internal motor variables
-        int leftCount;
-        int rightCount;
+private:
+    int clockwise(int motorCount);
+    int counterClockwise(int motorCount);
 
-        // int leftLastCount;
-        // int rightLastCount;
+    // h bridge control pins
+    int _togglePin;
 
-        // int leftLastEncoder;
-        // int rightLastEncoder;
+    int _leftVoltagePin;
+    int _rightVoltagePin;
+
+    int _switchForwardsPin;
+    int _switchBackwardsPin;
+
+    int _leftEncoderAPin;
+    int _leftEncoderBPin;
+
+    int _rightEncoderAPin;
+    int _rightEncoderBPin;
+
+    // internal motor variables
+    int _leftCount;
+    int _rightCount;
 };
 
 #endif

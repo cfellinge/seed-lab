@@ -22,16 +22,25 @@ int _rightEncoderAPin;
 int _rightEncoderBPin;
 
 // internal motor variables
-// int leftCount;
-// int rightCount;
+int _leftCount;
+int _rightCount;
 
-// int leftLastCount;
-// int rightLastCount;
+int _leftLastCount;
+int _rightLastCount;
 
 int _leftEncoderState;
 int _rightEncoderState;
 int _leftLastEncoderState;
 int _rightLastEncoderState;
+
+int _leftVelocity;
+int _rightVelocity;
+
+int _targetLeftVelocity;
+int _targetRightVelocity;
+
+int _leftWriteValue;
+int _rightWriteValue;
 
 MotorControl::MotorControl(int pin)
 {
@@ -47,13 +56,16 @@ MotorControl::MotorControl(int pin)
     this->_leftEncoderBPin = 6;
 
     this->_rightEncoderAPin = 3;
-    this->_rightEncoderBPin = 6;
+    this->_rightEncoderBPin = 5;
 }
 
 void MotorControl::printFive()
 {
     Serial.println("Print 5");
+}
 
+void MotorControl::begin()
+{
     pinMode(_togglePin, OUTPUT);
     pinMode(_leftVoltagePin, OUTPUT);
     pinMode(_rightVoltagePin, OUTPUT);
@@ -64,12 +76,66 @@ void MotorControl::printFive()
     pinMode(_leftEncoderBPin, INPUT);
     pinMode(_rightEncoderAPin, INPUT);
     pinMode(_rightEncoderBPin, INPUT);
+
+    // enable motors
+    digitalWrite(_togglePin, HIGH);
+
+    digitalWrite(_switchForwardsPin, HIGH);
+    digitalWrite(_switchBackwardsPin, LOW);
 }
 
-void MotorControl::begin()
+void MotorControl::updateMotorValues(int millisecondInterval)
 {
-    // attachInterrupt(digitalPinToInterrupt(_leftEncoderAPin), leftPinInterrupt, CHANGE);
-    // attachInterrupt(digitalPinToInterrupt(_rightEncoderAPin), rightPinInterrupt, CHANGE);
+    _leftVelocity = calculateMetersPerSecond(_leftCount, _leftLastCount, millisecondInterval);
+    _rightVelocity = calculateMetersPerSecond(_rightCount, _rightLastCount, millisecondInterval);
+    _leftLastCount = _leftCount;
+    _rightLastCount = _rightCount;
+
+    // feedback control code goes here
+    // inputs: _leftVelocity, _targetLeftVelocity
+    // output: _leftWriteValue (0 - 255)
+    if (abs(_leftVelocity) < (_targetLeftVelocity - 0.05))
+    {
+        _leftWriteValue += 2;
+    }
+    if (abs(_leftVelocity) > (_targetLeftVelocity + 0.05))
+    {
+        _leftWriteValue -= 2;
+    }
+    if (abs(_rightVelocity) < (_targetRightVelocity - 0.05))
+    {
+        _rightWriteValue += 2;
+    }
+    if (abs(_rightVelocity) > (_targetRightVelocity + 0.05))
+    {
+        _rightWriteValue -= 2;
+    }
+
+    // check that write values are within hard bounds
+    if (_leftWriteValue > 255) {
+        _leftWriteValue = 255;
+    }
+    if (_leftWriteValue < 0) {
+        _leftWriteValue = 0;
+    }
+    if (_rightWriteValue > 255) {
+        _rightWriteValue = 255;
+    }
+    if (_rightWriteValue < 0) {
+        _rightWriteValue = 0;
+    }
+
+    // write to motors
+    analogWrite(_leftVoltagePin, _leftWriteValue);
+    analogWrite(_rightVoltagePin, _rightWriteValue);
+}
+
+double MotorControl::calculateMetersPerSecond(int countsRotated, int lastCountsRotated, int numMilliSeconds)
+{
+    // Serial.println((String)countsRotated + "\t" + (String)lastCountsRotated);
+    double numRotations = (double)(countsRotated - lastCountsRotated) / 800;
+    double rotationsPerMinute = numRotations * (numMilliSeconds / 1000.0) * 60.0;
+    return rotationsPerMinute * 0.00764; // THIS IS M/S USING A WHEEL DIAMETER OF 14.6 CM, CAN BE CHANGED
 }
 
 int MotorControl::leftPinInterrupt()
@@ -81,12 +147,13 @@ int MotorControl::leftPinInterrupt()
         // logic for CW and CCW rotations
         if (digitalRead(_leftEncoderBPin) == HIGH)
         {
-            leftCount = counterClockwise(leftCount);
+            _leftCount = counterClockwise(_leftCount);
         }
         else
         {
-            leftCount = clockwise(leftCount);
+            _leftCount = clockwise(_leftCount);
         }
+        // Serial.println("Left Count: " + (String)_leftCount);
     }
 
     // save current state of A
@@ -102,12 +169,13 @@ int MotorControl::rightPinInterrupt()
         // logic for CW and CCW rotations
         if (digitalRead(_rightEncoderBPin) == HIGH)
         {
-            rightCount = counterClockwise(rightCount);
+            _rightCount = counterClockwise(_rightCount);
         }
         else
         {
-            rightCount = clockwise(rightCount);
+            _rightCount = clockwise(_rightCount);
         }
+        // Serial.println("Right Count: " + (String)_rightCount);
     }
 
     // save current state of A
@@ -124,9 +192,28 @@ int MotorControl::counterClockwise(int motorCount)
     return motorCount - 1;
 }
 
-// double calculateMetersPerSecond(int countsRotated, int lastCountsRotated, int numMilliSeconds)
-// {
-//   double numRotations = (double)(countsRotated - lastCountsRotated) / encoderCountsPerRotation;
-//   numRotations = numRotations * (numMilliSeconds / 1000.0) * 60.0;  //RETURN THIS FOR RPM VALUE
-//   return numRotations * 0.00764; //THIS IS M/S USING A WHEEL DIAMETER OF 14.6 CM, CAN BE CHANGED
-// }
+double MotorControl::getLeftVelocity()
+{
+    return _leftVelocity;
+}
+
+double MotorControl::getRightVelocity()
+{
+    return _rightVelocity;
+}
+
+int MotorControl::getLeftCount()
+{
+return _leftCount;
+}
+
+int MotorControl::getRightCount()
+{
+return _rightCount;
+}
+
+void MotorControl::setVelocities(double targetLeftVelocity, double targetRightVelocity)
+{
+    _targetLeftVelocity = targetLeftVelocity;
+    _targetRightVelocity = targetRightVelocity;
+}
