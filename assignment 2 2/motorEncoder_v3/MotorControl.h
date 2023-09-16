@@ -20,6 +20,9 @@ public:
     int getLeftCount();
     int getRightCount();
 
+    int getLeftEncoderPin();
+    int getRightEncoderPin();
+
     void setVelocities(double targetLeftVelocity, double targetRightVelocity);
 
     int leftPinInterrupt();

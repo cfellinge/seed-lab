@@ -33,11 +33,11 @@ int _rightEncoderState;
 int _leftLastEncoderState;
 int _rightLastEncoderState;
 
-int _leftVelocity;
-int _rightVelocity;
+double _leftVelocity;
+double _rightVelocity;
 
-int _targetLeftVelocity;
-int _targetRightVelocity;
+double _targetLeftVelocity;
+double _targetRightVelocity;
 
 int _leftWriteValue;
 int _rightWriteValue;
@@ -91,6 +91,8 @@ void MotorControl::updateMotorValues(int millisecondInterval)
     _leftLastCount = _leftCount;
     _rightLastCount = _rightCount;
 
+    // Serial.println((String)_leftVelocity + "\t" + (String)_rightVelocity);
+
     // feedback control code goes here
     // inputs: _leftVelocity, _targetLeftVelocity
     // output: _leftWriteValue (0 - 255)
@@ -132,10 +134,13 @@ void MotorControl::updateMotorValues(int millisecondInterval)
 
 double MotorControl::calculateMetersPerSecond(int countsRotated, int lastCountsRotated, int numMilliSeconds)
 {
-    // Serial.println((String)countsRotated + "\t" + (String)lastCountsRotated);
-    double numRotations = (double)(countsRotated - lastCountsRotated) / 800;
+    double numRotations = (double)(countsRotated - lastCountsRotated) / 800.0;
     double rotationsPerMinute = numRotations * (numMilliSeconds / 1000.0) * 60.0;
-    return rotationsPerMinute * 0.00764; // THIS IS M/S USING A WHEEL DIAMETER OF 14.6 CM, CAN BE CHANGED
+
+    // Serial.println((String)countsRotated + "\t" + (String)lastCountsRotated + "\t" + (String)numRotations + "\t" + (String)rotationsPerMinute + "\t" + (String)(rotationsPerMinute * 0.00764));
+
+    return rotationsPerMinute;
+    // return rotationsPerMinute * 0.00764; // THIS IS M/S USING A WHEEL DIAMETER OF 14.6 CM, CAN BE CHANGED
 }
 
 int MotorControl::leftPinInterrupt()
@@ -210,6 +215,16 @@ return _leftCount;
 int MotorControl::getRightCount()
 {
 return _rightCount;
+}
+
+int MotorControl::getLeftEncoderPin()
+{
+return _leftEncoderAPin;
+}
+
+int MotorControl::getRightEncoderPin()
+{
+return _rightEncoderAPin;
 }
 
 void MotorControl::setVelocities(double targetLeftVelocity, double targetRightVelocity)

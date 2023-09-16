@@ -16,6 +16,8 @@ int secondsSinceStartup = 0;
 StatusLEDControl statusLED(13);
 MotorControl motorControl(1);
 
+double velocityTarget = 1;
+
 ISR(TIMER2_COMPA_vect)
 {
   count++;
@@ -45,8 +47,9 @@ void setup()
 
   motorControl.begin();
 
-   motorControl.setVelocities(1, 1);
+  motorControl.setVelocities(2.2, 2.2);
 }
+
 
 void loop()
 {
@@ -66,7 +69,7 @@ void loop()
       // Serial.println("1 second has passed");
       Serial.println("Left count: " + (String)motorControl.getLeftCount() + ", Right count: " + (String)motorControl.getRightCount());
       // Serial.println("Seconds passed: " + (String)secondsSinceStartup);
-      Serial.println("Left m/s: " + (String)(motorControl.getLeftVelocity() * 10000) + ", Right m/s: " + (String)(motorControl.getRightVelocity() * 10000));
+      Serial.println("Left m/s: " + (String)(motorControl.getLeftVelocity()) + ", Right m/s: " + (String)(motorControl.getRightVelocity()));
       // Serial.println("Left Voltage: " + (String)((double)leftRPMSet/255.0*8.0) + ", Right Voltage: " + (String)((double)rightRPMSet/255.0*8.0));
 
       secondsSinceStartup++;
@@ -81,7 +84,6 @@ void loop()
     lastCount = count;
   }
 }
-
 
 void leftPinInterrupt()
 {
