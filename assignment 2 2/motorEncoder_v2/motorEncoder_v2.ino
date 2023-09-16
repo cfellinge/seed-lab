@@ -48,7 +48,6 @@ int rightRPMTarget = 0;
 int leftRPMSet = 0;
 int rightRPMSet = 0;
 
-
 static double encoderCountsPerRotation = 800.0;
 
 // STATE VARIABLES
@@ -100,6 +99,8 @@ void setup()
 
   digitalWrite(motorSwitchPin1, HIGH);
   digitalWrite(motorSwitchPin2, LOW);
+
+  leftRPMTarget = 10;
 }
 
 void loop()
@@ -137,10 +138,10 @@ void loop()
     if (count % 100 == 0)
     {
       // Serial.println("1 second has passed");
-      // Serial.println("Left count: " + (String)leftCount + ", Right count: " + (String)rightCount);
+      Serial.println("Left count: " + (String)leftCount + ", Right count: " + (String)rightCount);
       Serial.println("Seconds passed: " + (String)secondsSinceStartup);
       Serial.println("Left RPM: " + (String)leftRPM + ", Right RPM: " + (String)rightRPM);
-      Serial.println("Left Voltage: " + (String)((double)leftRPMSet/255.0*8.0) + ", Right Voltage: " + (String)((double)rightRPMSet/255.0*8.0));
+      // Serial.println("Left Voltage: " + (String)((double)leftRPMSet/255.0*8.0) + ", Right Voltage: " + (String)((double)rightRPMSet/255.0*8.0));
     }
 
     // controls for every second
@@ -175,6 +176,8 @@ double calculateRPM(int countsRotated, int lastCountsRotated, int numMilliSecond
   double numRotations = (double)(countsRotated - lastCountsRotated) / encoderCountsPerRotation;
   return numRotations * (numMilliSeconds / 1000.0) * 60.0;
 }
+
+
 
 void flash()
 {
