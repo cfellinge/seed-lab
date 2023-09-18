@@ -51,12 +51,6 @@ int leftRPMSet = 0;
 int rightRPMSet = 0;
 
 
-// counting variables
-double xPos = 0;
-double yPos = 0;
-double phi = 0;
-double wheelBaseWidth = 0.33;
-
 static double encoderCountsPerRotation = 800.0;
 
 // STATE VARIABLES
@@ -111,7 +105,8 @@ void setup()
 
   startTime = millis();
 
-
+  Serial.println("Starting Test:");
+  Serial.println("Time\tVoltage\tm/s");
 }
 
 int printToConsole = 1;
@@ -156,51 +151,33 @@ void loop()
       // Serial.println("Left RPM: " + (String)leftRPM + ", Right RPM: " + (String)rightRPM);
       // Serial.println("Left m/s: " + (String)leftMetersPerSecond + ", Right m/s: " + (String)rightMetersPerSecond);
       // Serial.println("Left Voltage: " + (String)((double)leftRPMSet/255.0*8.0) + ", Right Voltage: " + (String)((double)rightRPMSet/255.0*8.0));
-     
-      // 2b print
-      Serial.println((String)xPos + "\t" + (String)yPos + "\t" + (String)phi);
       
     }
 
     // controls for 10x every second
-    if (count % 10 == 0)
+    if (count % 5 == 0)
     {
-      leftRPM = calculateRPM(leftCount, leftLastCount, 100);
-      leftMetersPerSecond = calculateMetersPerSecond(leftCount, leftLastCount, 100);
+      if (printToConsole) Serial.println((String)count + "\t" + (String)((double)100/255.0*8.0) + "\t" + (String)leftRPM);
+      leftRPM = calculateRPM(leftCount, leftLastCount, 50);
+      leftMetersPerSecond = calculateMetersPerSecond(leftCount, leftLastCount, 50);
       leftLastCount = leftCount;
 
-      rightRPM = calculateRPM(rightCount, rightLastCount, 100);
-      rightMetersPerSecond = calculateMetersPerSecond(rightCount, rightLastCount, 100);
+      rightRPM = calculateRPM(rightCount, rightLastCount, 50);
+      rightMetersPerSecond = calculateMetersPerSecond(rightCount, rightLastCount, 50);
       rightLastCount = rightCount;
 
-      xPos = calculateX(xPos, 0.1, phi, leftMetersPerSecond, rightMetersPerSecond);
-      yPos = calculateY(yPos, 0.1, phi, leftMetersPerSecond, rightMetersPerSecond);
-      phi = calculatePhi(phi, 0.1, wheelBaseWidth, leftMetersPerSecond, rightMetersPerSecond);
-
-      // 2a print
-      // if (secondsSinceStartup < 3) Serial.println((String)secondsSinceStartup + "\t" + (String)(200/255.0*8.0) + "\t" + (String)leftMetersPerSecond);
-
-      
-      // debugging values
-      // Serial.print((String)xPos + "\t" + (String)yPos + "\t" + (String)phi + "\t");
-      // Serial.println((String)secondsSinceStartup + "\t" + (String)((double)leftRPMSet/255.0*8.0) + "\t" + (String)leftMetersPerSecond + "\t" + (String)rightMetersPerSecond);
-      
+      // secondsSinceStartup++;
     }
 
-    // // STEP UNIT TEST SHIT
-    // if (count == 100) {
-    //   Serial.println("STEP ON");
-    //   analogWrite(motorVoltagePin1, 200);
-    // }
+    if (count == 100) {
+      Serial.println("STEP ON");
+      analogWrite(motorVoltagePin1, 200);
+    }
 
-    // if (count == 300) {
-    //   Serial.println("STEP OFF");
-    //   analogWrite(motorVoltagePin1, 0);
-    //   printToConsole = 0;
-    // }
-
-    if (count % 100 == 0) {
-      secondsSinceStartup++;
+    if (count == 300) {
+      Serial.println("STEP OFF");
+      analogWrite(motorVoltagePin1, 0);
+      printToConsole = 0;
     }
 
     // do every 10 seconds
@@ -208,7 +185,6 @@ void loop()
     {
       count = 0;
 
-      // Serial.println("xPos \tyPos \tphi \tsec. \tvolts \t l m/s \t r m/s");
       
       // Serial.println("10 seconds have passed");
       // leftRPMTarget = random(0, 100);
@@ -230,23 +206,7 @@ double calculateMetersPerSecond(int countsRotated, int lastCountsRotated, int nu
 {
   double numRotations = (double)(countsRotated - lastCountsRotated) / encoderCountsPerRotation;
   numRotations = numRotations * (numMilliSeconds / 1000.0) * 60.0;  //RETURN THIS FOR RPM VALUE
-  // numRotations = numRotations * 0.007644;
-  return numRotations; 
-}
-
-double calculateX(double xOld, double deltaT, double phiOld, double velocityLeft, double velocityRight) {
-  return xOld + deltaT * cos(phiOld) * (velocityLeft + velocityRight) / 2;
-}
-
-double calculateY(double yOld, double deltaT, double phiOld, double velocityLeft, double velocityRight) {
-  return yOld + deltaT * sin(phiOld) * (velocityLeft + velocityRight) / 2;
-}
-
-double calculatePhi(double phiOld, double deltaT, double wheelBaseWidth, double velocityLeft, double velocityRight) {
-  double phiTemp = phiOld + deltaT * (velocityLeft - velocityRight) / wheelBaseWidth;
-  if (phiTemp > 6.283) phiTemp = 0;
-  if (phiTemp < 0) phiTemp = 6.283;
-  return phiTemp;
+  return numRotations * 0.00764; //THIS IS M/S USING A WHEEL DIAMETER OF 14.6 CM, CAN BE CHANGED
 }
 
 void flash()
@@ -299,12 +259,12 @@ void rightPinInterrupt()
 
 void leftClockwise()
 {
-  leftCount -= 1;
+  leftCount += 1;
 }
 
 void leftCounterClockwise()
 {
-  leftCount += 1;
+  leftCount -= 1;
 }
 void rightClockwise()
 {
