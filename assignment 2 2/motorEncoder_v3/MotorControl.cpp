@@ -86,7 +86,7 @@ void MotorControl::begin()
 
 void MotorControl::updateMotorValues(int millisecondInterval)
 {
-    _leftVelocity = calculateMetersPerSecond(_leftCount, _leftLastCount, millisecondInterval);
+    _leftVelocity = -1 * calculateMetersPerSecond(_leftCount, _leftLastCount, millisecondInterval);
     _rightVelocity = calculateMetersPerSecond(_rightCount, _rightLastCount, millisecondInterval);
     _leftLastCount = _leftCount;
     _rightLastCount = _rightCount;
@@ -139,8 +139,8 @@ double MotorControl::calculateMetersPerSecond(int countsRotated, int lastCountsR
 
     // Serial.println((String)countsRotated + "\t" + (String)lastCountsRotated + "\t" + (String)numRotations + "\t" + (String)rotationsPerMinute + "\t" + (String)(rotationsPerMinute * 0.00764));
 
-    return rotationsPerMinute;
-    // return rotationsPerMinute * 0.00764; // THIS IS M/S USING A WHEEL DIAMETER OF 14.6 CM, CAN BE CHANGED
+    // return rotationsPerMinute;
+    return rotationsPerMinute * 0.00764; // THIS IS M/S USING A WHEEL DIAMETER OF 14.6 CM, CAN BE CHANGED
 }
 
 int MotorControl::leftPinInterrupt()
