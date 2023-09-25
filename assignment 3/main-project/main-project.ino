@@ -1,7 +1,6 @@
 #include "MotorControl.h"
 #include "StatusLEDControl.h"
 #include "PositionMath.h"
-//test
 
 
 // TIMER2 INTERRUPT VARIABLES
@@ -9,7 +8,7 @@ int count;
 int lastCount;
 byte timerReloadValue = 0x9C;
 
-// // motor encoder data pins
+// motor encoder data pins
 int motorEncoderLeftA = 2;
 int motorEncoderRightA = 3;
 
@@ -26,6 +25,7 @@ PositionMath position(wheelbaseWidth);
 
 double velocityTarget = 1;
 
+// Timer2 ISR, called every 10ms
 ISR(TIMER2_COMPA_vect)
 {
   count++;
@@ -60,6 +60,7 @@ void setup()
 
 void loop()
 {
+  // do 100 times a second
   if (lastCount != count)
   {
 
@@ -79,6 +80,7 @@ void loop()
     // do every second
     if (count % 100 == 0)
     {
+      // PRINT TESTING
       // Serial.println("1 second has passed");
       // Serial.println("Left count: " + (String)motorControl.getLeftCount() + ", Right count: " + (String)motorControl.getRightCount());
       // Serial.println("Seconds passed: " + (String)secondsSinceStartup);
@@ -93,11 +95,13 @@ void loop()
     {
       count = 0;
     }
-
+    // update last count
     lastCount = count;
   }
 }
 
+
+// Interrupts for when changes are detected in motor encoder pins
 void leftPinInterrupt()
 {
   motorControl.leftPinInterrupt();
