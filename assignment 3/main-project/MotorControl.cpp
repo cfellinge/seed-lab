@@ -42,6 +42,9 @@ double _targetRightVelocity;
 int _leftWriteValue;
 int _rightWriteValue;
 
+double _targetLeftWheelPosition;
+double _targetRightWheelPosition;
+
 MotorControl::MotorControl()
 {
     this->_togglePin = 4;
@@ -231,4 +234,17 @@ void MotorControl::setVelocities(double targetLeftVelocity, double targetRightVe
 {
     _targetLeftVelocity = targetLeftVelocity;
     _targetRightVelocity = targetRightVelocity;
+}
+
+
+//targets are in radians
+void MotorControl::setWheelPosition(double targetLeftWheelPosition, double targetRightWheelPosition)
+{
+    _targetLeftWheelPosition = targetLeftWheelPosition;
+    _targetRightWheelPosition = targetRightWheelPosition;
+}
+
+void MotorControl::updateWheelPositionValues(int millisecondInterval)
+{
+
 }

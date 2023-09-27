@@ -33,6 +33,9 @@ public:
 
     void printFive();
 
+    void setWheelPosition(double targetLeftWheelPosition, double targetRightWheelPosition);
+    void updateWheelPositionValues(int millisecondInterval);
+    
 private:
     int clockwise(int motorCount);
     int counterClockwise(int motorCount);

@@ -1,6 +1,7 @@
 #include "MotorControl.h"
 #include "StatusLEDControl.h"
 #include "PositionMath.h"
+#include "PiCommunication.h"
 
 // TIMER2 INTERRUPT VARIABLES
 int count;
@@ -36,6 +37,8 @@ void setup()
   // configure serial
   Serial.begin(115200);
 
+  
+
   // configure timer 2 interrupt
   cli();
   TCCR0B = 0;
@@ -51,7 +54,7 @@ void setup()
 
   // set output pins to output
   pinMode(LED_BUILTIN, OUTPUT);
-
+  PiCommunication.begin();
   motorControl.begin();
 
   motorControl.setVelocities(2.6, 2.6);
@@ -73,6 +76,12 @@ void loop()
     {
       position.updatePosition(0.25, motorControl.getLeftVelocity(), motorControl.getRightVelocity());
       Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", phi: " + (String)(position.getPhi()));
+    }
+
+    if (count % 25 == 2)
+    {
+      PiCommunication.receive;
+      int quadrant = PiCommunication.getInstruction;
     }
 
     // do every second
