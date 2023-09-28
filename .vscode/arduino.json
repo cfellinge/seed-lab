@@ -1,5 +1,0 @@
-{
-    "board": "arduino:avr:uno",
-    "port": "COM6",
-    "sketch": "assignment 2 2\\motorEncoder_v2\\motorEncoder_v2.ino"
-}

@@ -30,6 +30,7 @@ int _rightLastCount;
 
 int _leftEncoderState;
 int _rightEncoderState;
+
 int _leftLastEncoderState;
 int _rightLastEncoderState;
 
@@ -39,8 +40,16 @@ double _rightVelocity;
 double _targetLeftVelocity;
 double _targetRightVelocity;
 
+double _targetLeftPosition;
+double _targetRightPosition;
+
 int _leftWriteValue;
 int _rightWriteValue;
+
+// 0 = velocity control
+// 1 = position control
+int _motorMode;
+
 
 MotorControl::MotorControl()
 {
@@ -96,21 +105,44 @@ void MotorControl::updateMotorValues(int millisecondInterval)
     // feedback control code goes here
     // inputs: _leftVelocity, _targetLeftVelocity
     // output: _leftWriteValue (0 - 255)
-    if (abs(_leftVelocity) < (_targetLeftVelocity - 0.05))
+
+    if (_motorMode == 0)
     {
-        _leftWriteValue += 2;
+        if (abs(_leftVelocity) < (_targetLeftVelocity - 0.05))
+        {
+            _leftWriteValue += 2;
+        }
+        if (abs(_leftVelocity) > (_targetLeftVelocity + 0.05))
+        {
+            _leftWriteValue -= 2;
+        }
+        if (abs(_rightVelocity) < (_targetRightVelocity - 0.05))
+        {
+            _rightWriteValue += 2;
+        }
+        if (abs(_rightVelocity) > (_targetRightVelocity + 0.05))
+        {
+            _rightWriteValue -= 2;
+        }
     }
-    if (abs(_leftVelocity) > (_targetLeftVelocity + 0.05))
+    else if (_motorMode == 1)
     {
-        _leftWriteValue -= 2;
-    }
-    if (abs(_rightVelocity) < (_targetRightVelocity - 0.05))
-    {
-        _rightWriteValue += 2;
-    }
-    if (abs(_rightVelocity) > (_targetRightVelocity + 0.05))
-    {
-        _rightWriteValue -= 2;
+        if (abs(_leftVelocity) < (_targetLeftVelocity - 0.05))
+        {
+            _leftWriteValue += 2;
+        }
+        if (abs(_leftVelocity) > (_targetLeftVelocity + 0.05))
+        {
+            _leftWriteValue -= 2;
+        }
+        if (abs(_rightVelocity) < (_targetRightVelocity - 0.05))
+        {
+            _rightWriteValue += 2;
+        }
+        if (abs(_rightVelocity) > (_targetRightVelocity + 0.05))
+        {
+            _rightWriteValue -= 2;
+        }
     }
 
     // check that write values are within hard bounds
@@ -142,6 +174,15 @@ double MotorControl::calculateMetersPerSecond(int countsRotated, int lastCountsR
     // return rotationsPerMinute;
     return rotationsPerMinute * 0.00764; // THIS IS M/S USING A WHEEL DIAMETER OF 14.6 CM, CAN BE CHANGED
 }
+
+
+// returns motor angle in radians
+// assumes motor starts at 0 radians
+double MotorControl::calculatePosition(int countsRotated) {
+    
+}
+
+
 
 int MotorControl::leftPinInterrupt()
 {
@@ -231,4 +272,31 @@ void MotorControl::setVelocities(double targetLeftVelocity, double targetRightVe
 {
     _targetLeftVelocity = targetLeftVelocity;
     _targetRightVelocity = targetRightVelocity;
+}
+
+void MotorControl::setPositions(double leftPosition, double rightPosition)
+{
+    while (leftPosition > 6.28)
+    {
+        leftPosition -= 6.28;
+    }
+    while (rightPosition > 6.28)
+    {
+        rightPosition -= 6.28;
+    }
+    _targetLeftPosition = leftPosition;
+    _targetRightPosition = rightPosition;
+}
+
+// 0 = velocity control
+// 1 = position control
+void MotorControl::setMotorMode(int mode)
+{
+    if (!(mode == 0 || mode == 1))
+    {
+        Serial.println("Error: Attempted to set motor mode outside of range");
+        return;
+    }
+
+    _motorMode = mode;
 }

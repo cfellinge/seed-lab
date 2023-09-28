@@ -24,12 +24,17 @@ public:
     int getRightEncoderPin();
 
     void setVelocities(double targetLeftVelocity, double targetRightVelocity);
+    void setPositions(double leftPosition, double rightPosition);
+
+    void setMotorMode(int mode);
 
     int leftPinInterrupt();
     int rightPinInterrupt();
 
     void updateMotorValues(int millisecondInterval);
     double calculateMetersPerSecond(int countsRotated, int lastCountsRotated, int numMilliSeconds);
+
+    double calculatePosition(int countsRotated);
 
     void printFive();
 
