@@ -146,7 +146,7 @@ void MotorControl::updateMotorValues(int millisecondInterval)
     else if (_motorMode == 2)
     {
         double _leftTargetPlusPi = mod2Pi(_targetLeftPosition + PI);
-        double _leftDifference;
+        double _rightTargetPlusPi = mod2Pi(_targetRightPosition + PI);
         
         if (_targetLeftPosition > PI) {
             if (_leftPosition > _targetLeftPosition || _leftPosition < _leftTargetPlusPi) {
@@ -165,19 +165,29 @@ void MotorControl::updateMotorValues(int millisecondInterval)
                 setDirection(0, 0);
             }
         }
+
+         if (_targetRightPosition > PI) {
+            if (_rightPosition > _targetRightPosition || _rightPosition < _rightTargetPlusPi) {
+                setDirection(0, 0);
+            }
+            else {
+                setDirection(0, 1);
+            }
+        }
+        else if (_targetRightPosition < PI) {
+            
+            if (_rightPosition < _targetRightPosition || _rightPosition > _rightTargetPlusPi) {
+                setDirection(0, 1);
+            }
+            else {
+                setDirection(0, 0);
+            }
+        }
         
         _leftWriteValue = abs(( _targetLeftPosition - _leftPosition) * 40);
+        _rightWriteValue = abs(( _targetRightPosition - _rightPosition) * 40);
 
-        // if (_rightPosition < _targetRightPosition) {
-        //     setDirection(1, 0);
-        // }
-        // else {
-        //     setDirection(1, 1);
-        // }
-        // _rightWriteValue = abs(( _targetRightPosition - _rightPosition) * 40);
-        _rightWriteValue = 0;
-
-        Serial.println("Left Goal: " + (String)_targetLeftPosition + ", Actual: " + (String)_leftPosition + ", Write Value: " +  (String)_leftWriteValue + ", Direction: " + (String)digitalRead(PIN7));
+        // Serial.println("Left Goal: " + (String)_targetLeftPosition + ", Actual: " + (String)_leftPosition + ", Write Value: " +  (String)_leftWriteValue + ", Direction: " + (String)digitalRead(PIN7));
     }
 
     // check that write values are within hard bounds
@@ -291,7 +301,7 @@ void MotorControl::setDirection(int side, int direction)
     }
     if (side == 0) {
         digitalWrite(_leftDirectionPin, direction);
-        Serial.println("Set left direction to " + (String)direction);
+        // Serial.println("Set left direction to " + (String)direction);
     }
     if (side == 1) {
         digitalWrite(_rightDirectionPin, direction);

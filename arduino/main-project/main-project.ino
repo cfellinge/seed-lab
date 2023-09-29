@@ -9,10 +9,11 @@
 #include "MotorControl.h"
 #include "StatusLEDControl.h"
 #include "PositionMath.h"
+#include "PiCommunication.h"
 
 // TIMER2 INTERRUPT VARIABLES
 int count;
-int lastCount;
+int lastCount;/
 byte timerReloadValue = 0x9C;
 
 // // motor encoder data pins
@@ -31,6 +32,10 @@ StatusLEDControl taskLED(11);
 MotorControl motorController(0);
 PositionMath position(wheelbaseWidth);
 
+PiCommunication piCommunication;
+
+int quadrant;
+
 double velocityTarget = 1;
 
 ISR(TIMER2_COMPA_vect)
@@ -45,7 +50,6 @@ void setup()
   Serial.begin(115200);
   Serial.println("SEED Lab Robot Initializing");
 
-
   // configure timer 2 interrupt
   cli();
   TCCR0B = 0;
@@ -56,23 +60,26 @@ void setup()
   sei();
   Serial.println("Timer2 Interrupt Configured");
 
-
   // attach motor encoder interrupts
   attachInterrupt(digitalPinToInterrupt(motorEncoderLeftA), leftPinInterrupt, CHANGE);
   attachInterrupt(digitalPinToInterrupt(motorEncoderRightA), rightPinInterrupt, CHANGE);
-  
+
   Serial.println("Motor Encoder Interrupts Configured");
 
   motorController.begin();
 
+  piCommunication.begin();
+  Wire.onReceive(piCommsInterrupt);
+
+  Serial.println("Pi Communication initialized");
 
   Serial.println("Beginning main loop:");
   Serial.println("--------------------------------------------------------------------------");
 
   motorController.setMotorMode(2);
-  
+
   // smotorController.setVelocities(2.6, 2.6);
-  motorController.setPositions(1.6, 0);
+  // motorController.setPositions(1.6, 0);
 }
 
 void loop()
@@ -96,6 +103,28 @@ void loop()
       taskLED.offLED();
     }
 
+    if (count % 25 == 2)
+    {
+      quadrant = piCommunication.getInstruction();
+      switch (quadrant)
+      {
+      case 1:
+        motorController.setPositions(0, PI);
+        break;
+      case 2:
+        motorController.setPositions(0, 0);
+        break;
+      case 3:
+        motorController.setPositions(PI, 0);
+        break;
+      case 4:
+        motorController.setPositions(PI, PI);
+        break;
+      default:
+        motorController.setPositions(0, 0);
+      }
+    }
+
     // do every second
     if (count % 100 == 0)
     {
@@ -106,8 +135,8 @@ void loop()
       // Serial.println("Left m/s: " + (String)(motorController.getLeftVelocity()) + ", Right m/s: " + (String)(motorController.getRightVelocity()));
       // Serial.println("Left Voltage: " + (String)((double)leftRPMSet/255.0*8.0) + ", Right Voltage: " + (String)((double)rightRPMSet/255.0*8.0));
       // Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", phi: " + (String)(position.getPhi()));
-      Serial.println("Left pos: " + (String)(motorController.getLeftPosition() / PI) + " pi, Right pos: " + (String)(motorController.getRightPosition() / PI) + " pi");
-
+      // Serial.println("Left pos: " + (String)(motorController.getLeftPosition() / PI) + " pi, Right pos: " + (String)(motorController.getRightPosition() / PI) + " pi");
+      Serial.println("Quadrant goal: " + (String)quadrant);
       secondsSinceStartup++;
       taskLED.offLED();
     }
@@ -132,4 +161,9 @@ void leftPinInterrupt()
 void rightPinInterrupt()
 {
   motorController.rightPinInterrupt();
+}
+
+void piCommsInterrupt(int howMany) 
+{
+  piCommunication.receive(howMany);
 }
