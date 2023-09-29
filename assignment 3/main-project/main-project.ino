@@ -58,7 +58,7 @@ void setup()
   motorControl.begin();
 
   motorControl.setVelocities(2.6, 2.6);
-}
+}//////
 
 void loop()
 {
