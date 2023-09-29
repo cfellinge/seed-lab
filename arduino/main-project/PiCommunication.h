@@ -3,6 +3,9 @@
     Controls communication with Raspberry Pi
 */
 
+#ifndef PiCommunication_h
+#define PiCommunication_h
+
 #include "Arduino.h"
 #include <Wire.h>
 
@@ -13,3 +16,5 @@ class PiCommunication {
     private:
         
 };
+
+#endif

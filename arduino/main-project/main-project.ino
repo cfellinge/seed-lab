@@ -1,3 +1,11 @@
+/*
+  Main SEED Lab Code
+  Fall 2023
+  Cody J Fellinge
+  Matt J Hatch
+*/
+
+#include "Arduino.h"
 #include "MotorControl.h"
 #include "StatusLEDControl.h"
 #include "PositionMath.h"
@@ -18,9 +26,9 @@ int secondsSinceStartup = 0;
 double wheelbaseWidth = 0.33;
 
 StatusLEDControl clockLED(13);
-StatusLEDControl taskLED(12);
+StatusLEDControl taskLED(11);
 
-MotorControl motorControl();
+MotorControl motorController(0);
 PositionMath position(wheelbaseWidth);
 
 double velocityTarget = 1;
@@ -35,6 +43,8 @@ void setup()
 {
   // configure serial
   Serial.begin(115200);
+  Serial.println("SEED Lab Robot Initializing");
+
 
   // configure timer 2 interrupt
   cli();
@@ -44,17 +54,25 @@ void setup()
   TCCR2B = (1 << CS22) | (1 << CS21) | (1 << CS20);
   TIMSK2 = (1 << OCIE2A);
   sei();
+  Serial.println("Timer2 Interrupt Configured");
+
 
   // attach motor encoder interrupts
   attachInterrupt(digitalPinToInterrupt(motorEncoderLeftA), leftPinInterrupt, CHANGE);
   attachInterrupt(digitalPinToInterrupt(motorEncoderRightA), rightPinInterrupt, CHANGE);
+  
+  Serial.println("Motor Encoder Interrupts Configured");
 
-  // set output pins to output
-  pinMode(LED_BUILTIN, OUTPUT);
+  motorController.begin();
 
-  motorControl.begin();
 
-  motorControl.setVelocities(2.6, 2.6);
+  Serial.println("Beginning main loop:");
+  Serial.println("--------------------------------------------------------------------------");
+
+  motorController.setMotorMode(2);
+  
+  // smotorController.setVelocities(2.6, 2.6);
+  motorController.setPositions(1.6, 0);
 }
 
 void loop()
@@ -65,32 +83,41 @@ void loop()
     // do four times a second
     if (count % 25 == 0)
     {
+      taskLED.onLED();
       clockLED.toggleLED();
-      motorControl.updateMotorValues(250);
+      taskLED.offLED();
     }
 
-    if (count % 25 == 1)
+    if (count % 10 == 1)
     {
-      position.updatePosition(0.25, motorControl.getLeftVelocity(), motorControl.getRightVelocity());
-      Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", phi: " + (String)(position.getPhi()));
+      taskLED.onLED();
+      motorController.updateMotorValues(100);
+      position.updatePosition(0.1, motorController.getLeftVelocity(), motorController.getRightVelocity());
+      taskLED.offLED();
     }
 
     // do every second
     if (count % 100 == 0)
     {
+      taskLED.onLED();
       // Serial.println("1 second has passed");
-      // Serial.println("Left count: " + (String)motorControl.getLeftCount() + ", Right count: " + (String)motorControl.getRightCount());
+      // Serial.println("Left count: " + (String)motorController.getLeftCount() + ", Right count: " + (String)motorController.getRightCount());
       // Serial.println("Seconds passed: " + (String)secondsSinceStartup);
-      // Serial.println("Left m/s: " + (String)(motorControl.getLeftVelocity()) + ", Right m/s: " + (String)(motorControl.getRightVelocity()));
+      // Serial.println("Left m/s: " + (String)(motorController.getLeftVelocity()) + ", Right m/s: " + (String)(motorController.getRightVelocity()));
       // Serial.println("Left Voltage: " + (String)((double)leftRPMSet/255.0*8.0) + ", Right Voltage: " + (String)((double)rightRPMSet/255.0*8.0));
+      // Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", phi: " + (String)(position.getPhi()));
+      Serial.println("Left pos: " + (String)(motorController.getLeftPosition() / PI) + " pi, Right pos: " + (String)(motorController.getRightPosition() / PI) + " pi");
 
       secondsSinceStartup++;
+      taskLED.offLED();
     }
 
     // do every 10 seconds
     if (count == 1000)
     {
+      taskLED.onLED();
       count = 0;
+      taskLED.offLED();
     }
 
     lastCount = count;
@@ -99,10 +126,10 @@ void loop()
 
 void leftPinInterrupt()
 {
-  motorControl.leftPinInterrupt();
+  motorController.leftPinInterrupt();
 }
 
 void rightPinInterrupt()
 {
-  motorControl.rightPinInterrupt();
+  motorController.rightPinInterrupt();
 }

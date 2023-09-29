@@ -3,6 +3,9 @@
     Code to handle math for SEED Lab robot position
 */
 
+#ifndef PositionMath_h
+#define PositionMath_h
+
 #include "Arduino.h"
 
 class PositionMath {
@@ -22,3 +25,5 @@ class PositionMath {
         double _y;
         double _phi;
 };
+
+#endif
