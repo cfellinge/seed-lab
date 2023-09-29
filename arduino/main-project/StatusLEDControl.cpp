@@ -1,6 +1,6 @@
 /*
     StatusLEDControl.cpp
-    Code to control motors on SEED Lab robot
+    Code to control Test LED
 */
 
 #include "Arduino.h"

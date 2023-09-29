@@ -1,6 +1,6 @@
 /*
     StatusLEDControl.h
-    Code to control an LED for seed lab robot
+    Code to control Test LED
 */
 
 #ifndef StatusLEDControl_h

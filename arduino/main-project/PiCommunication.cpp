@@ -46,6 +46,7 @@ void PiCommunication::printReceived()
 }
 
 // CURRENTLY ASSUMES ONLY ONE INT OF DATA
+// STOPS WORKING AFTER 32 MESSAGES
 int PiCommunication::getInstruction()
 {
   // for (int i = 0; i < sizeof(instruction); i++) {
