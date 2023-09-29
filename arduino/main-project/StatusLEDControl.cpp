@@ -11,6 +11,7 @@ int _LEDState;
 
 StatusLEDControl::StatusLEDControl(int pin) {
     this->_LEDPin = pin;
+    pinMode(_LEDPin, OUTPUT);
     _LEDState = LOW;
 }
 
