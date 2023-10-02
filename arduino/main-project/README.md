@@ -25,22 +25,22 @@ Analog 4: Raspberry Pi Data Link
 
 ## Files
 
-### main-project.ino:
+#### main-project.ino:
 
 Main super-loop and timer interrupt, controls primary functions of Arduino.
 
-### MotorControl:
+#### MotorControl.h / MotorControl.cpp:
 
 Controls motor encoder inputs and feedback control for the two motors.
 
-### PiCommunication:
+#### PiCommunication.h / PiCommunication.cpp:
 
 Recieves instructions from Raspberry Pi, and sends instructions to Raspberry Pi
 
-### PositionMath:
+#### PositionMath.h / PositionMath.cpp:
 
 Math for dead reckoning position finding
 
-### StatusLEDControl
+#### StatusLEDControl.h / StatusLEDControl.cpp:
 
 Basic class to control LEDs
