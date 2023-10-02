@@ -188,6 +188,26 @@ void MotorControl::updateMotorValues(int millisecondInterval)
         }
         
         _leftWriteValue = abs(( _targetLeftPosition - _leftPosition) * 40);
+
+        if (_leftWriteValue < 25) {
+            if (abs(( _targetLeftPosition - _leftPosition)) < 0.01) {
+                _leftWriteValue = 25;
+            }
+            else {
+                _leftWriteValue = 0;
+            }
+        }
+
+        
+        if (_rightWriteValue < 25) {
+            if (abs(( _targetRightPosition - _rightPosition)) < 0.01) {
+                _rightWriteValue = 25;
+            }
+            else {
+                _rightWriteValue = 0;
+            }
+        }
+        
         _rightWriteValue = abs(( _targetRightPosition - _rightPosition) * 40);
 
         // Serial.println("Left Goal: " + (String)_targetLeftPosition + ", Actual: " + (String)_leftPosition + ", Write Value: " +  (String)_leftWriteValue + ", Direction: " + (String)digitalRead(PIN7));
