@@ -51,6 +51,7 @@ int _motorMode;
 int _leftWriteValue;
 int _rightWriteValue;
 
+// default constructor
 MotorControl::MotorControl(int initalMode)
 {
     this->_togglePin = 4;
@@ -70,6 +71,7 @@ MotorControl::MotorControl(int initalMode)
     setMotorMode(initalMode);
 }
 
+// called in setup to initialize state
 void MotorControl::begin()
 {
     pinMode(_togglePin, OUTPUT);
@@ -98,6 +100,7 @@ void MotorControl::begin()
     Serial.println("Motor Controller Configured.");
 }
 
+// update how fast motors are spinning and their current position
 void MotorControl::updateMotorValues(int millisecondInterval)
 {
     _leftVelocity = -1 * calculateMetersPerSecond(_leftCount, _leftLastCount, millisecondInterval);
@@ -121,7 +124,7 @@ void MotorControl::updateMotorValues(int millisecondInterval)
         _rightWriteValue = 0;
     }
 
-
+    // velocity control
     else if (_motorMode == 1)
     {
         if (abs(_leftVelocity) < (_targetLeftVelocity - 0.05))
@@ -142,7 +145,7 @@ void MotorControl::updateMotorValues(int millisecondInterval)
         }
     }
 
-
+    // positional control
     else if (_motorMode == 2)
     {
         double _leftTargetPlusPi = mod2Pi(_targetLeftPosition + PI);

@@ -78,7 +78,7 @@ void setup()
 
   motorController.setMotorMode(2);
 
-  // smotorController.setVelocities(2.6, 2.6);
+  // motorController.setVelocities(2.6, 2.6);
   // motorController.setPositions(1.6, 0);
 }
 
@@ -90,6 +90,7 @@ void loop()
     // do four times a second
     if (count % 25 == 0)
     {
+      // LED Blink
       taskLED.onLED();
       clockLED.toggleLED();
       taskLED.offLED();
@@ -97,6 +98,7 @@ void loop()
 
     if (count % 10 == 1)
     {
+      // Update values read from and programmed to motor
       taskLED.onLED();
       motorController.updateMotorValues(100);
       position.updatePosition(0.1, motorController.getLeftVelocity(), motorController.getRightVelocity());
@@ -105,7 +107,10 @@ void loop()
 
     if (count % 25 == 2)
     {
+      // quadrant is the number read in from the Pi
       quadrant = piCommunication.getInstruction();
+
+      // case statement for wheel positions
       switch (quadrant)
       {
       case 1:
@@ -129,6 +134,7 @@ void loop()
     if (count % 100 == 0)
     {
       taskLED.onLED();
+      // TEST PRINTS
       // Serial.println("1 second has passed");
       // Serial.println("Left count: " + (String)motorController.getLeftCount() + ", Right count: " + (String)motorController.getRightCount());
       // Serial.println("Seconds passed: " + (String)secondsSinceStartup);
