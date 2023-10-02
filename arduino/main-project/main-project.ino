@@ -13,7 +13,7 @@
 
 // TIMER2 INTERRUPT VARIABLES
 int count;
-int lastCount;/
+int lastCount;
 byte timerReloadValue = 0x9C;
 
 // // motor encoder data pins
@@ -109,16 +109,16 @@ void loop()
       switch (quadrant)
       {
       case 1:
-        motorController.setPositions(0, PI);
-        break;
-      case 2:
         motorController.setPositions(0, 0);
         break;
+      case 2:
+        motorController.setPositions(0, PI);
+        break;
       case 3:
-        motorController.setPositions(PI, 0);
+        motorController.setPositions(PI, PI);
         break;
       case 4:
-        motorController.setPositions(PI, PI);
+        motorController.setPositions(PI, 0);
         break;
       default:
         motorController.setPositions(0, 0);
