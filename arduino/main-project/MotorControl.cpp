@@ -150,65 +150,99 @@ void MotorControl::updateMotorValues(int millisecondInterval)
     {
         double _leftTargetPlusPi = mod2Pi(_targetLeftPosition + PI);
         double _rightTargetPlusPi = mod2Pi(_targetRightPosition + PI);
-        
-        if (_targetLeftPosition > PI) {
-            if (_leftPosition > _targetLeftPosition || _leftPosition < _leftTargetPlusPi) {
+
+        if (_targetLeftPosition > PI)
+        {
+            if (_leftPosition > _targetLeftPosition || _leftPosition < _leftTargetPlusPi)
+            {
                 setDirection(0, 0);
+                if (_leftPosition < _leftTargetPlusPi)
+                {
+                    _leftWriteValue = abs(_targetLeftPosition - (_leftPosition + 2 * PI)) * 40;
+                }
+                else
+                {
+                    _leftWriteValue = abs(_targetLeftPosition - _leftPosition) * 40;
+                }
             }
-            else {
+            else
+            {
                 setDirection(0, 1);
+
+                _leftWriteValue = abs(_targetLeftPosition - _leftPosition) * 40;
             }
         }
-        else if (_targetLeftPosition < PI) {
-            
-            if (_leftPosition < _targetLeftPosition || _leftPosition > _leftTargetPlusPi) {
+        else if (_targetLeftPosition <= PI)
+        {
+
+            if (_leftPosition < _targetLeftPosition || _leftPosition > _leftTargetPlusPi)
+            {
                 setDirection(0, 1);
+                if (_leftPosition > _leftTargetPlusPi)
+                {
+                    _leftWriteValue = abs(_targetLeftPosition - (_leftPosition + 2 * PI)) * 40;
+                }
+                else
+                {
+                    _leftWriteValue = abs(_targetLeftPosition - _leftPosition) * 40;
+                }
             }
-            else {
+            else
+            {
                 setDirection(0, 0);
+                _leftWriteValue = abs(_targetLeftPosition - _leftPosition) * 40;
             }
         }
 
-         if (_targetRightPosition > PI) {
-            if (_rightPosition > _targetRightPosition || _rightPosition < _rightTargetPlusPi) {
-                setDirection(0, 0);
+        if (_targetRightPosition > PI)
+        {
+            if (_rightPosition > _targetRightPosition || _rightPosition < _rightTargetPlusPi)
+            {
+                setDirection(1, 0);
             }
-            else {
-                setDirection(0, 1);
-            }
-        }
-        else if (_targetRightPosition < PI) {
-            
-            if (_rightPosition < _targetRightPosition || _rightPosition > _rightTargetPlusPi) {
-                setDirection(0, 1);
-            }
-            else {
-                setDirection(0, 0);
+            else
+            {
+                setDirection(1, 1);
             }
         }
-        
-        _leftWriteValue = abs(( _targetLeftPosition - _leftPosition) * 40);
+        else if (_targetRightPosition <= PI)
+        {
 
-        if (_leftWriteValue < 25) {
-            if (abs(( _targetLeftPosition - _leftPosition)) < 0.01) {
+            if (_rightPosition < _targetRightPosition || _rightPosition > _rightTargetPlusPi)
+            {
+                setDirection(1, 1);
+            }
+            else
+            {
+                setDirection(1, 0);
+            }
+        }
+
+        if (_leftWriteValue < 25)
+        {
+            if (abs((_targetLeftPosition - _leftPosition)) < 0.01)
+            {
                 _leftWriteValue = 25;
             }
-            else {
+            else
+            {
                 _leftWriteValue = 0;
             }
         }
 
-        
-        if (_rightWriteValue < 25) {
-            if (abs(( _targetRightPosition - _rightPosition)) < 0.01) {
+        _rightWriteValue = abs((_targetRightPosition - _rightPosition) * 40);
+
+        if (_rightWriteValue < 25)
+        {
+            if (abs((_targetRightPosition - _rightPosition)) < 0.01)
+            {
                 _rightWriteValue = 25;
             }
-            else {
+            else
+            {
                 _rightWriteValue = 0;
             }
         }
-        
-        _rightWriteValue = abs(( _targetRightPosition - _rightPosition) * 40);
 
         // Serial.println("Left Goal: " + (String)_targetLeftPosition + ", Actual: " + (String)_leftPosition + ", Write Value: " +  (String)_leftWriteValue + ", Direction: " + (String)digitalRead(PIN7));
     }
@@ -253,10 +287,12 @@ double MotorControl::calculatePosition(int countsRotated)
 {
     double numRotations = (double)(countsRotated) / 800.0;
     double numRadians = numRotations * (2 * PI);
-    while (numRadians > 2 * PI) {
+    while (numRadians > 2 * PI)
+    {
         numRadians -= 2 * PI;
     }
-    while (numRadians < 0) {
+    while (numRadians < 0)
+    {
         numRadians += 2 * PI;
     }
     return numRadians;
@@ -318,15 +354,18 @@ int MotorControl::counterClockwise(int motorCount)
 
 void MotorControl::setDirection(int side, int direction)
 {
-    if (!(direction == 0 || direction == 1)) {
+    if (!(direction == 0 || direction == 1))
+    {
         Serial.println("MotorControl::setDirection: Error: Tried to set invalid direction.");
         return;
     }
-    if (side == 0) {
+    if (side == 0)
+    {
         digitalWrite(_leftDirectionPin, direction);
         // Serial.println("Set left direction to " + (String)direction);
     }
-    if (side == 1) {
+    if (side == 1)
+    {
         digitalWrite(_rightDirectionPin, direction);
     }
 }
@@ -373,10 +412,12 @@ double MotorControl::getRightPosition()
 
 double MotorControl::mod2Pi(double input)
 {
-    while (input > 2 * PI) {
+    while (input > 2 * PI)
+    {
         input -= 2 * PI;
     }
-    while (input < 0) {
+    while (input < 0)
+    {
         input += 2 * PI;
     }
     return input;
