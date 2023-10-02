@@ -1,4 +1,4 @@
-# MINI PROJECT HARDWARE SETUP
+## Arduino Documentation
 
 The Arduino code is object-oriented, and the code is split up into several libraries for ease of access and long-term scalability.
 
