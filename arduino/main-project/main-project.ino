@@ -37,6 +37,7 @@ PiCommunication piCommunication;
 int quadrant;
 
 double velocityTarget = 1;
+double positionTarget = 0;
 
 ISR(TIMER2_COMPA_vect)
 {
@@ -126,7 +127,7 @@ void loop()
         motorController.setPositions(PI, 0);
         break;
       default:
-        motorController.setPositions(0, 0);
+        motorController.setPositions(positionTarget, positionTarget);
       }
     }
 
@@ -139,10 +140,11 @@ void loop()
       // Serial.println("Left count: " + (String)motorController.getLeftCount() + ", Right count: " + (String)motorController.getRightCount());
       // Serial.println("Seconds passed: " + (String)secondsSinceStartup);
       // Serial.println("Left m/s: " + (String)(motorController.getLeftVelocity()) + ", Right m/s: " + (String)(motorController.getRightVelocity()));
-      // Serial.println("Left Voltage: " + (String)((double)leftRPMSet/255.0*8.0) + ", Right Voltage: " + (String)((double)rightRPMSet/255.0*8.0));
+      Serial.println("Left Voltage: " + (String)((double)motorController.getLeftWriteValue()/255.0*8.0) + ", Right Voltage: " + (String)((double)motorController.getRightWriteValue()/255.0*8.0));
       // Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", phi: " + (String)(position.getPhi()));
-      // Serial.println("Left pos: " + (String)(motorController.getLeftPosition() / PI) + " pi, Right pos: " + (String)(motorController.getRightPosition() / PI) + " pi");
+      Serial.println("Left pos: " + (String)(motorController.getLeftPosition() / PI) + " pi, Right pos: " + (String)(motorController.getRightPosition() / PI) + " pi");
       Serial.println("Quadrant goal: " + (String)quadrant);
+      Serial.println("Position goal: " + (String)(positionTarget / PI) + "  pi\n");
       secondsSinceStartup++;
       taskLED.offLED();
     }
@@ -152,6 +154,7 @@ void loop()
     {
       taskLED.onLED();
       count = 0;
+      positionTarget = (double)rand() / (double)RAND_MAX * 50.0;
       taskLED.offLED();
     }
 

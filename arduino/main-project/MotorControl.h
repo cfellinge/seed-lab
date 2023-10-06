@@ -49,10 +49,13 @@ public:
     double getLeftPosition();
     double getRightPosition();
 
+    double getLeftWriteValue();
+    double getRightWriteValue();
+
     double mod2Pi(double input);
 
-    void setWheelPosition(double targetLeftWheelPosition, double targetRightWheelPosition);
-    void updateWheelPositionValues(int millisecondInterval);
+    // void setWheelPosition(double targetLeftWheelPosition, double targetRightWheelPosition);
+    // void updateWheelPositionValues(int millisecondInterval);
     
 private:
     int clockwise(int motorCount);

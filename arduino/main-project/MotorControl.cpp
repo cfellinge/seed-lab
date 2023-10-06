@@ -51,6 +51,16 @@ int _motorMode;
 int _leftWriteValue;
 int _rightWriteValue;
 
+// PID Tuning Variables
+const double _KP = 9;
+const double _KI = 0.15;
+
+double _leftIntegralError;
+double _rightIntegralError;
+
+double _leftPosError;
+double _rightPosError;
+
 // default constructor
 MotorControl::MotorControl(int initalMode)
 {
@@ -67,6 +77,9 @@ MotorControl::MotorControl(int initalMode)
 
     this->_rightEncoderAPin = 3;
     this->_rightEncoderBPin = 5;
+
+    _leftIntegralError = 0;
+    _rightIntegralError = 0;
 
     setMotorMode(initalMode);
 }
@@ -103,7 +116,7 @@ void MotorControl::begin()
 // update how fast motors are spinning and their current position
 void MotorControl::updateMotorValues(int millisecondInterval)
 {
-    _leftVelocity = -1 * calculateMetersPerSecond(_leftCount, _leftLastCount, millisecondInterval);
+    _leftVelocity = calculateMetersPerSecond(_leftCount, _leftLastCount, millisecondInterval);
     _rightVelocity = calculateMetersPerSecond(_rightCount, _rightLastCount, millisecondInterval);
 
     _leftPosition = calculatePosition(_leftCount);
@@ -148,104 +161,62 @@ void MotorControl::updateMotorValues(int millisecondInterval)
     // positional control
     else if (_motorMode == 2)
     {
-        double _leftTargetPlusPi = mod2Pi(_targetLeftPosition + PI);
-        double _rightTargetPlusPi = mod2Pi(_targetRightPosition + PI);
-
-        if (_targetLeftPosition > PI)
+        if (_leftPosition > _targetLeftPosition)
         {
-            if (_leftPosition > _targetLeftPosition || _leftPosition < _leftTargetPlusPi)
-            {
-                setDirection(0, 0);
-                if (_leftPosition < _leftTargetPlusPi)
-                {
-                    _leftWriteValue = abs(_targetLeftPosition - (_leftPosition + 2 * PI)) * 40;
-                }
-                else
-                {
-                    _leftWriteValue = abs(_targetLeftPosition - _leftPosition) * 40;
-                }
-            }
-            else
-            {
-                setDirection(0, 1);
-
-                _leftWriteValue = abs(_targetLeftPosition - _leftPosition) * 40;
-            }
+            setDirection(0, 0);
         }
-        else if (_targetLeftPosition <= PI)
+        else
         {
-
-            if (_leftPosition < _targetLeftPosition || _leftPosition > _leftTargetPlusPi)
-            {
-                setDirection(0, 1);
-                if (_leftPosition > _leftTargetPlusPi)
-                {
-                    _leftWriteValue = abs(_targetLeftPosition - (_leftPosition + 2 * PI)) * 40;
-                }
-                else
-                {
-                    _leftWriteValue = abs(_targetLeftPosition - _leftPosition) * 40;
-                }
-            }
-            else
-            {
-                setDirection(0, 0);
-                _leftWriteValue = abs(_targetLeftPosition - _leftPosition) * 40;
-            }
+            setDirection(0, 1);
         }
 
-        if (_targetRightPosition > PI)
+        if (_rightPosition > _targetRightPosition)
         {
-            if (_rightPosition > _targetRightPosition || _rightPosition < _rightTargetPlusPi)
-            {
-                setDirection(1, 0);
-            }
-            else
-            {
-                setDirection(1, 1);
-            }
+            setDirection(1, 0);
         }
-        else if (_targetRightPosition <= PI)
+        else
         {
-
-            if (_rightPosition < _targetRightPosition || _rightPosition > _rightTargetPlusPi)
-            {
-                setDirection(1, 1);
-            }
-            else
-            {
-                setDirection(1, 0);
-            }
+            setDirection(1, 1);
         }
 
-        if (_leftWriteValue < 25)
+        _leftPosError = abs(_targetLeftPosition - _leftPosition);
+        _leftIntegralError = _leftIntegralError + _leftPosError * (double)millisecondInterval / 1000;
+        double _leftDesiredSpeed = _KP * _leftPosError + _KI * _leftIntegralError;
+        double _leftError = _leftDesiredSpeed - _leftVelocity;
+        _leftWriteValue = _KP * _leftError;
+
+        if (_leftWriteValue > 255)
         {
-            if (abs((_targetLeftPosition - _leftPosition)) < 0.01)
+            _leftWriteValue = 255;
+
+            if (_leftError > 255.0 / _KP)
             {
-                _leftWriteValue = 25;
+                _leftError = 255.0 / _KP;
             }
-            else
-            {
-                _leftWriteValue = 0;
-            }
+
+            _leftIntegralError = (_leftWriteValue - _KP * _leftError) / _KI;
         }
 
-        _rightWriteValue = abs((_targetRightPosition - _rightPosition) * 40);
+        _rightPosError = abs(_targetRightPosition - _rightPosition);
+        _rightIntegralError = _rightIntegralError + _rightPosError * (double)millisecondInterval / 1000;
+        double _rightDesiredSpeed = _KP * _rightPosError + _KI * _rightIntegralError;
+        double _rightError = _rightDesiredSpeed - _rightVelocity;
+        _rightWriteValue = _KP * _rightError;
 
-        if (_rightWriteValue < 25)
+        if (_rightWriteValue > 255)
         {
-            if (abs((_targetRightPosition - _rightPosition)) < 0.01)
-            {
-                _rightWriteValue = 25;
-            }
-            else
-            {
-                _rightWriteValue = 0;
-            }
-        }
+            _rightWriteValue = 255;
 
-        // Serial.println("Left Goal: " + (String)_targetLeftPosition + ", Actual: " + (String)_leftPosition + ", Write Value: " +  (String)_leftWriteValue + ", Direction: " + (String)digitalRead(PIN7));
+            if (_rightError > 255.0 / _KP)
+            {
+                _rightError = 255.0 / _KP;
+            }
+
+            _rightIntegralError = (_rightWriteValue - _KP * _rightError) / _KI;
+        }
     }
+
+    // Serial.println("Left Goal: " + (String)_targetLeftPosition + ", Actual: " + (String)_leftPosition + ", Write Value: " +  (String)_leftWriteValue + ", Direction: " + (String)digitalRead(PIN7));
 
     // check that write values are within hard bounds
     if (_leftWriteValue > 255)
@@ -286,15 +257,11 @@ double MotorControl::calculateMetersPerSecond(int countsRotated, int lastCountsR
 double MotorControl::calculatePosition(int countsRotated)
 {
     double numRotations = (double)(countsRotated) / 800.0;
+
     double numRadians = numRotations * (2 * PI);
-    while (numRadians > 2 * PI)
-    {
-        numRadians -= 2 * PI;
-    }
-    while (numRadians < 0)
-    {
-        numRadians += 2 * PI;
-    }
+
+    numRadians = mod2Pi(numRadians);
+
     return numRadians;
 }
 
@@ -410,16 +377,26 @@ double MotorControl::getRightPosition()
     return _rightPosition;
 }
 
+double MotorControl::getLeftWriteValue()
+{
+    return _leftWriteValue;
+}
+
+double MotorControl::getRightWriteValue()
+{
+    return _rightWriteValue;
+}
+
 double MotorControl::mod2Pi(double input)
 {
-    while (input > 2 * PI)
-    {
-        input -= 2 * PI;
-    }
-    while (input < 0)
-    {
-        input += 2 * PI;
-    }
+    //     while (input > 2 * PI)
+    //     {
+    //         input -= 2 * PI;
+    //     }
+    //     while (input < 0)
+    //     {
+    //         input += 2 * PI;
+    //     }
     return input;
 }
 
@@ -431,8 +408,8 @@ void MotorControl::setVelocities(double targetLeftVelocity, double targetRightVe
 
 void MotorControl::setPositions(double leftPosition, double rightPosition)
 {
-    leftPosition = mod2Pi(leftPosition);
-    rightPosition = mod2Pi(rightPosition);
+    // leftPosition = mod2Pi(leftPosition);
+    // rightPosition = mod2Pi(rightPosition);
 
     _targetLeftPosition = leftPosition;
     _targetRightPosition = rightPosition;
