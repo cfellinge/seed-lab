@@ -6,6 +6,9 @@
 #include "Arduino.h"
 #include "MotorControl.h"
 
+// wheel radius in meters
+const double WHEEL_RADIUS = 0.0725;
+
 // h bridge control pins
 int _togglePin;
 
@@ -63,6 +66,14 @@ double _rightPosError;
 
 double _rawLeftWriteValue;
 double _rawRightWriteValue;
+
+
+// demo 1 variables
+double forwardVel;
+double rotationalVel;
+
+double va;
+double dv;
 
 // default constructor
 MotorControl::MotorControl(int initalMode)
@@ -173,7 +184,7 @@ void MotorControl::updateMotorValues(int millisecondInterval)
             setDirection(0, 1);
         }
 
-        if (_rightPosition > _targetRightPosition)
+        if (_rightPosition < _targetRightPosition)
         {
             setDirection(1, 0);
         }
@@ -225,62 +236,18 @@ void MotorControl::updateMotorValues(int millisecondInterval)
         _rightWriteValue = _rawRightWriteValue;
     }
 
-    // go foward a set distance
+    // demo 1 setup
     else if (_motorMode == 4)
     {
-        if (_leftPosition > _targetLeftPosition)
-        {
-            setDirection(0, 0);
-        }
-        else
-        {
-            setDirection(0, 1);
-        }
 
-        if (_rightPosition > _targetRightPosition)
-        {
-            setDirection(1, 0);
-        }
-        else
-        {
-            setDirection(1, 1);
-        }
+        double leftVel = getLeftVelocity();
+        double rightVel = getRightVelocity();
 
-        _leftPosError = abs(_targetLeftPosition - _leftPosition);
-        _leftIntegralError = _leftIntegralError + _leftPosError * (double)millisecondInterval / 1000;
-        double _leftDesiredSpeed = _KP * _leftPosError + _KI * _leftIntegralError;
-        double _leftError = _leftDesiredSpeed - _leftVelocity;
-        _leftWriteValue = _KP * _leftError;
+        forwardVel = WHEEL_RADIUS * (leftVel + rightVel) / 2;
+        rotationalVel = WHEEL_RADIUS * (leftVel - rightVel) / 2;
 
-        if (_leftWriteValue > 255)
-        {
-            _leftWriteValue = 255;
-
-            if (_leftError > 255.0 / _KP)
-            {
-                _leftError = 255.0 / _KP;
-            }
-
-            _leftIntegralError = (_leftWriteValue - _KP * _leftError) / _KI;
-        }
-
-        _rightPosError = abs(_targetRightPosition - _rightPosition);
-        _rightIntegralError = _rightIntegralError + _rightPosError * (double)millisecondInterval / 1000;
-        double _rightDesiredSpeed = _KP * _rightPosError + _KI * _rightIntegralError;
-        double _rightError = _rightDesiredSpeed - _rightVelocity;
-        _rightWriteValue = _KP * _rightError;
-
-        if (_rightWriteValue > 255)
-        {
-            _rightWriteValue = 255;
-
-            if (_rightError > 255.0 / _KP)
-            {
-                _rightError = 255.0 / _KP;
-            }
-
-            _rightIntegralError = (_rightWriteValue - _KP * _rightError) / _KI;
-        }
+        _leftWriteValue = (va + dv) / 2;
+        _rightWriteValue = (va - dv) / 2;
     }
 
     // Serial.println("Left Goal: " + (String)_targetLeftPosition + ", Actual: " + (String)_leftPosition + ", Write Value: " +  (String)_leftWriteValue + ", Direction: " + (String)digitalRead(PIN7));
@@ -289,9 +256,22 @@ void MotorControl::updateMotorValues(int millisecondInterval)
 
 
     // write to motors
-    analogWrite(_leftVoltagePin, _leftWriteValue);
-    analogWrite(_rightVoltagePin, _rightWriteValue);
+    setWriteValues(_leftWriteValue, _rightWriteValue);
 }
+
+double MotorControl::getForwardVel() {
+    return forwardVel;
+}
+
+double MotorControl::getRotationalVel() {
+    return rotationalVel;
+}
+
+void MotorControl::setVAandDV(double va, double dv) {
+    va = va;
+    dv = dv;
+}
+
 
 void MotorControl::setWriteValues(double leftWrite, double rightWrite)
 {
@@ -312,8 +292,11 @@ void MotorControl::setWriteValues(double leftWrite, double rightWrite)
         rightWrite = 0;
     }
 
-    _rawLeftWriteValue = leftWrite;
-    _rawRightWriteValue = rightWrite;
+    _leftWriteValue = leftWrite;
+    _rightWriteValue = rightWrite;
+
+    analogWrite(_leftVoltagePin, _leftWriteValue);
+    analogWrite(_rightVoltagePin, _rightWriteValue);
 }
 
 
@@ -370,13 +353,13 @@ int MotorControl::rightPinInterrupt()
     if (_rightEncoderState == HIGH && _rightLastEncoderState == LOW)
     {
         // logic for CW and CCW rotations
-        if (digitalRead(_rightEncoderBPin) == HIGH)
+        if (digitalRead(_rightEncoderBPin) == LOW) // change this from HIGH to LOW to change which way the wheel turns
         {
-            _rightCount = clockwise(_rightCount);
+            _rightCount = counterClockwise(_rightCount);
         }
         else
         {
-            _rightCount = counterClockwise(_rightCount);
+            _rightCount = clockwise(_rightCount);
         }
         // Serial.println("Right Count: " + (String)_rightCount);
     }
@@ -496,7 +479,7 @@ void MotorControl::setPositions(double leftPosition, double rightPosition)
 // 2 = position control
 void MotorControl::setMotorMode(int mode)
 {
-    if (!((mode == 0) || (mode == 1) || (mode == 2)))
+    if (!(mode >= 0 && mode <= 4))
     {
         Serial.println("Error: Attempted to set motor mode outside of range");
         return;

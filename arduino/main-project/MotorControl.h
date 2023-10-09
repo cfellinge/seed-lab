@@ -28,6 +28,9 @@ public:
     int rightPinInterrupt();
 
     void updateMotorValues(int millisecondInterval);
+    double getForwardVel();
+    double getRotationalVel();
+    void setVAandDV(double va, double dv);
     double calculateMetersPerSecond(int countsRotated, int lastCountsRotated, int numMilliSeconds);
 
     double calculatePosition(int countsRotated);

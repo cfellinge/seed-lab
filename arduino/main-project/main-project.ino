@@ -76,10 +76,16 @@ void setup()
   Serial.println("Beginning main loop:");
   Serial.println("--------------------------------------------------------------------------");
 
-  motorController.setMotorMode(2);
+  motorController.setMotorMode(4);
+
+  // motorController.setDirection(0, 0);
+  // motorController.setDirection(1, 1);
+  // motorController.setVelocities(0.1, 0.1);
 
   // motorController.setVelocities(2.6, 2.6);
   // motorController.setPositions(1.6, 0);
+
+  motorController.setVAandDV(100, 0);
 }
 
 void loop()
@@ -120,20 +126,22 @@ void loop()
       // Serial.println("Seconds passed: " + (String)secondsSinceStartup);
       // Serial.println("Left m/s: " + (String)(motorController.getLeftVelocity()) + ", Right m/s: " + (String)(motorController.getRightVelocity()));
       Serial.println("Left Voltage: " + (String)((double)motorController.getLeftWriteValue()/255.0*8.0) + ", Right Voltage: " + (String)((double)motorController.getRightWriteValue()/255.0*8.0));
-      // Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", phi: " + (String)(position.getPhi()));
+      Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", phi: " + (String)(position.getPhi()));
       Serial.println("Left pos: " + (String)(motorController.getLeftPosition() / PI) + " pi, Right pos: " + (String)(motorController.getRightPosition() / PI) + " pi");
       Serial.println("Position goal: " + (String)(positionTarget / PI) + "  pi\n");
+      Serial.println("Forwards velocity: " + (String)motorController.getForwardVel() + ", Rotational velocity: " + (String)motorController.getRotationalVel() + "\n");
       secondsSinceStartup++;
       taskLED.offLED();
     }
 
-    // do every 10 seconds
-    if (count == 999)
+    // do every 5 seconds
+    if (count == 499)
     {
       taskLED.onLED();
       count = 0;
       positionTarget = (double)rand() / (double)RAND_MAX * 50.0;
-      motorController.setPositions(positionTarget, positionTarget);
+      // motorController.setPositions(positionTarget, positionTarget);
+      motorController.setVAandDV(0, 0);
       taskLED.offLED();
     }
 
