@@ -239,11 +239,11 @@ void MotorControl::updateMotorValues(int millisecondInterval)
 
         if (_rightPosition > _targetRightPosition)
         {
-            setDirection(1, 1);
+            setDirection(1, 0);
         }
         else
         {
-            setDirection(1, 0);
+            setDirection(1, 1);
         }
 
         _leftPosError = abs(_targetLeftPosition - _leftPosition);

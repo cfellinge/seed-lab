@@ -128,11 +128,12 @@ void loop()
     }
 
     // do every 10 seconds
-    if (count == 1000)
+    if (count == 999)
     {
       taskLED.onLED();
       count = 0;
       positionTarget = (double)rand() / (double)RAND_MAX * 50.0;
+      motorController.setPositions(positionTarget, positionTarget);
       taskLED.offLED();
     }
 
