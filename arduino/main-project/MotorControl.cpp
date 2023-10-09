@@ -52,8 +52,8 @@ int _leftWriteValue;
 int _rightWriteValue;
 
 // PID Tuning Variables
-const double _KP = 5;
-const double _KI = 0.3;
+const double _KP = 9;
+const double _KI = 0.15;
 
 double _leftIntegralError;
 double _rightIntegralError;
@@ -239,11 +239,11 @@ void MotorControl::updateMotorValues(int millisecondInterval)
 
         if (_rightPosition > _targetRightPosition)
         {
-            setDirection(1, 0);
+            setDirection(1, 1);
         }
         else
         {
-            setDirection(1, 1);
+            setDirection(1, 0);
         }
 
         _leftPosError = abs(_targetLeftPosition - _leftPosition);
@@ -372,11 +372,11 @@ int MotorControl::rightPinInterrupt()
         // logic for CW and CCW rotations
         if (digitalRead(_rightEncoderBPin) == HIGH)
         {
-            _rightCount = counterClockwise(_rightCount);
+            _rightCount = clockwise(_rightCount);
         }
         else
         {
-            _rightCount = clockwise(_rightCount);
+            _rightCount = counterClockwise(_rightCount);
         }
         // Serial.println("Right Count: " + (String)_rightCount);
     }

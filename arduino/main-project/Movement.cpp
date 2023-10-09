@@ -6,11 +6,11 @@
 #include "Arduino.h"
 #include "Movement.h"
 
-MotorControl mc;
+// MotorControl mc;
 
 Movement::Movement(MotorControl motorController)
 {
-    mc = motorController;
+    //mc = motorController(0);
 }
 
 void Movement::moveToCoordinates(double x, double y, double phi)
@@ -24,7 +24,7 @@ void Movement::moveAtSpeed(double leftSpeed, double rightSpeed)
 void Movement::moveForwards(double distance)
 {
     double numRadians = distance * 10;
-    setRotations(mc.getLeftPosition() + numRadians, mc.getRightPosition() + numRadians);
+    //setRotations(mc.getLeftPosition() + numRadians, mc.getRightPosition() + numRadians);
 }
 
 void Movement::setRotations(double leftPosition, double rightPosition)
