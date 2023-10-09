@@ -32,6 +32,8 @@ public:
 
     double calculatePosition(int countsRotated);
 
+    void setWriteValues(double leftWrite, double rightWrite);
+
     // sets direction of motors
     // side: 0 = left, 1 = right
     // direction: 0 = forwards, 1 = backwards

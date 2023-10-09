@@ -10,6 +10,7 @@
 #include "StatusLEDControl.h"
 #include "PositionMath.h"
 #include "PiCommunication.h"
+#include "Movement.h"
 
 // TIMER2 INTERRUPT VARIABLES
 int count;
@@ -33,8 +34,6 @@ MotorControl motorController(0);
 PositionMath position(wheelbaseWidth);
 
 PiCommunication piCommunication;
-
-int quadrant;
 
 double velocityTarget = 1;
 double positionTarget = 0;
@@ -108,27 +107,7 @@ void loop()
 
     if (count % 25 == 2)
     {
-      // quadrant is the number read in from the Pi
-      quadrant = piCommunication.getInstruction();
-
-      // case statement for wheel positions
-      switch (quadrant)
-      {
-      case 1:
-        motorController.setPositions(0, 0);
-        break;
-      case 2:
-        motorController.setPositions(0, PI);
-        break;
-      case 3:
-        motorController.setPositions(PI, PI);
-        break;
-      case 4:
-        motorController.setPositions(PI, 0);
-        break;
-      default:
-        motorController.setPositions(positionTarget, positionTarget);
-      }
+      
     }
 
     // do every second
@@ -143,7 +122,6 @@ void loop()
       Serial.println("Left Voltage: " + (String)((double)motorController.getLeftWriteValue()/255.0*8.0) + ", Right Voltage: " + (String)((double)motorController.getRightWriteValue()/255.0*8.0));
       // Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", phi: " + (String)(position.getPhi()));
       Serial.println("Left pos: " + (String)(motorController.getLeftPosition() / PI) + " pi, Right pos: " + (String)(motorController.getRightPosition() / PI) + " pi");
-      Serial.println("Quadrant goal: " + (String)quadrant);
       Serial.println("Position goal: " + (String)(positionTarget / PI) + "  pi\n");
       secondsSinceStartup++;
       taskLED.offLED();
