@@ -33,6 +33,11 @@ double PositionMath::getPhi()
     return _phi;
 }
 
+double PositionMath::getRho()
+{
+    return _rho;
+}
+
 void PositionMath::resetPosition()
 {
     this->resetPosition(0, 0, 0);
@@ -53,6 +58,7 @@ void PositionMath::updatePosition(double numSeconds, double velocityLeft, double
     _x = newX;
     _y = newY;
     _phi = newPhi;
+    _rho = sqrt(pow(_x, 2) + pow(_y, 2));
 }
 
 double PositionMath::calculateX(double xOld, double deltaT, double phiOld, double velocityLeft, double velocityRight)

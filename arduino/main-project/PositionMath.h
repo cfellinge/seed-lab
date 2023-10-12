@@ -14,6 +14,7 @@ class PositionMath {
         double getX();
         double getY();
         double getPhi();
+        double getRho();
         void resetPosition();
         void resetPosition(double x, double y, double phi);
         void updatePosition(double numMilliseconds, double velocityLeft, double velocityRight);
@@ -24,6 +25,7 @@ class PositionMath {
         double _x;
         double _y;
         double _phi;
+        double _rho;
 };
 
 #endif

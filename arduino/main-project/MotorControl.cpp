@@ -69,8 +69,6 @@ double _rawRightWriteValue;
 
 
 // demo 1 variables
-double forwardVel;
-double rotationalVel;
 
 double va;
 double dv;
@@ -147,8 +145,8 @@ void MotorControl::updateMotorValues(int millisecondInterval)
 
     if (_motorMode == 0)
     {
-        _leftWriteValue = 0;
-        _rightWriteValue = 0;
+        // _leftWriteValue = 0;
+        // _rightWriteValue = 0;
     }
 
     // velocity control, proportional (bad)
@@ -240,14 +238,7 @@ void MotorControl::updateMotorValues(int millisecondInterval)
     else if (_motorMode == 4)
     {
 
-        double leftVel = getLeftVelocity();
-        double rightVel = getRightVelocity();
 
-        forwardVel = WHEEL_RADIUS * (leftVel + rightVel) / 2;
-        rotationalVel = WHEEL_RADIUS * (leftVel - rightVel) / 2;
-
-        _leftWriteValue = (va + dv) / 2;
-        _rightWriteValue = (va - dv) / 2;
     }
 
     // Serial.println("Left Goal: " + (String)_targetLeftPosition + ", Actual: " + (String)_leftPosition + ", Write Value: " +  (String)_leftWriteValue + ", Direction: " + (String)digitalRead(PIN7));
@@ -257,14 +248,6 @@ void MotorControl::updateMotorValues(int millisecondInterval)
 
     // write to motors
     setWriteValues(_leftWriteValue, _rightWriteValue);
-}
-
-double MotorControl::getForwardVel() {
-    return forwardVel;
-}
-
-double MotorControl::getRotationalVel() {
-    return rotationalVel;
 }
 
 void MotorControl::setVAandDV(double va, double dv) {
@@ -308,7 +291,7 @@ double MotorControl::calculateMetersPerSecond(int countsRotated, int lastCountsR
     // Serial.println((String)countsRotated + "\t" + (String)lastCountsRotated + "\t" + (String)numRotations + "\t" + (String)rotationsPerMinute + "\t" + (String)(rotationsPerMinute * 0.00764));
 
     // return rotationsPerMinute;
-    return rotationsPerMinute * 0.00764; // THIS IS M/S USING A WHEEL DIAMETER OF 14.6 CM, CAN BE CHANGED
+    return rotationsPerMinute * 0.3; // THIS IS M/S USING A WHEEL DIAMETER OF 14.6 CM, CAN BE CHANGED
 }
 
 // returns motor angle in radians

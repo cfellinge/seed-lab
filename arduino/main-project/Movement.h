@@ -28,8 +28,14 @@ public:
 
     // rotate the robot a set angle (radians)
     void rotateLeft(double angle, int millisecondInterval);
+
+    // step response test for demo 1
+    void setVAandDV(double va, double dv);
+
+    double getForwardVel();
+    double getRotationalVel();
+
 private:
-    
 };
 
 #endif

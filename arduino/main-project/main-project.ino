@@ -32,11 +32,15 @@ StatusLEDControl taskLED(11);
 
 MotorControl motorController(0);
 PositionMath position(wheelbaseWidth);
+Movement movement(motorController);
 
 PiCommunication piCommunication;
 
 double velocityTarget = 1;
 double positionTarget = 0;
+
+double vaTarget = 0;
+double dvTarget = 0;
 
 ISR(TIMER2_COMPA_vect)
 {
@@ -76,16 +80,17 @@ void setup()
   Serial.println("Beginning main loop:");
   Serial.println("--------------------------------------------------------------------------");
 
-  motorController.setMotorMode(4);
+  motorController.setMotorMode(0);
 
-  // motorController.setDirection(0, 0);
-  // motorController.setDirection(1, 1);
+  motorController.setDirection(0, 1);
+  motorController.setDirection(1, 0);
   // motorController.setVelocities(0.1, 0.1);
 
   // motorController.setVelocities(2.6, 2.6);
   // motorController.setPositions(1.6, 0);
 
-  motorController.setVAandDV(100, 0);
+  vaTarget = 4;
+  dvTarget = 0;
 }
 
 void loop()
@@ -106,7 +111,14 @@ void loop()
     {
       // Update values read from and programmed to motor
       taskLED.onLED();
+
+      if (position.getRho() > 1) {
+        dvTarget = 0;
+        vaTarget = 0;
+      }
+
       motorController.updateMotorValues(100);
+      movement.setVAandDV(vaTarget, dvTarget);
       position.updatePosition(0.1, motorController.getLeftVelocity(), motorController.getRightVelocity());
       taskLED.offLED();
     }
@@ -126,10 +138,10 @@ void loop()
       // Serial.println("Seconds passed: " + (String)secondsSinceStartup);
       // Serial.println("Left m/s: " + (String)(motorController.getLeftVelocity()) + ", Right m/s: " + (String)(motorController.getRightVelocity()));
       Serial.println("Left Voltage: " + (String)((double)motorController.getLeftWriteValue()/255.0*8.0) + ", Right Voltage: " + (String)((double)motorController.getRightWriteValue()/255.0*8.0));
-      Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", phi: " + (String)(position.getPhi()));
+      Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", rho: " + (String)(position.getRho()) + ", phi: " + (String)(position.getPhi()));
       Serial.println("Left pos: " + (String)(motorController.getLeftPosition() / PI) + " pi, Right pos: " + (String)(motorController.getRightPosition() / PI) + " pi");
-      Serial.println("Position goal: " + (String)(positionTarget / PI) + "  pi\n");
-      Serial.println("Forwards velocity: " + (String)motorController.getForwardVel() + ", Rotational velocity: " + (String)motorController.getRotationalVel() + "\n");
+      // Serial.println("Position goal: " + (String)(positionTarget / PI) + "  pi\n");
+      Serial.println("Forwards velocity: " + (String)movement.getForwardVel() + ", Rotational velocity: " + (String)movement.getRotationalVel() + "\n");
       secondsSinceStartup++;
       taskLED.offLED();
     }
@@ -139,7 +151,7 @@ void loop()
     {
       taskLED.onLED();
       count = 0;
-      positionTarget = (double)rand() / (double)RAND_MAX * 50.0;
+
       // motorController.setPositions(positionTarget, positionTarget);
       motorController.setVAandDV(0, 0);
       taskLED.offLED();
