@@ -50,11 +50,14 @@ void PositionMath::resetPosition(double x, double y, double phi)
     _phi = phi;
 }
 
-void PositionMath::updatePosition(double numSeconds, double velocityLeft, double velocityRight)
+void PositionMath::updatePosition(double numMilliseconds, double velocityLeft, double velocityRight)
 {
+    double numSeconds = numMilliseconds / 1000.0;
+
     double newX = this->calculateX(_x, numSeconds, _phi, velocityLeft, velocityRight);
     double newY = this->calculateY(_y, numSeconds, _phi, velocityLeft, velocityRight);
     double newPhi = this->calculatePhi(_phi, numSeconds, _wheelBaseWidth, velocityLeft, velocityRight);
+    
     _x = newX;
     _y = newY;
     _phi = newPhi;

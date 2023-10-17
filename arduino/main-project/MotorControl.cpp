@@ -67,7 +67,6 @@ double _rightPosError;
 double _rawLeftWriteValue;
 double _rawRightWriteValue;
 
-
 // demo 1 variables
 
 double va;
@@ -229,7 +228,8 @@ void MotorControl::updateMotorValues(int millisecondInterval)
     }
 
     // accept a raw write value
-    else if (_motorMode == 3) {
+    else if (_motorMode == 3)
+    {
         _leftWriteValue = _rawLeftWriteValue;
         _rightWriteValue = _rawRightWriteValue;
     }
@@ -237,27 +237,44 @@ void MotorControl::updateMotorValues(int millisecondInterval)
     // demo 1 setup
     else if (_motorMode == 4)
     {
-
-
     }
 
     // Serial.println("Left Goal: " + (String)_targetLeftPosition + ", Actual: " + (String)_leftPosition + ", Write Value: " +  (String)_leftWriteValue + ", Direction: " + (String)digitalRead(PIN7));
 
     // check that write values are within hard bounds
 
-
     // write to motors
     setWriteValues(_leftWriteValue, _rightWriteValue);
 }
 
-void MotorControl::setVAandDV(double va, double dv) {
+void MotorControl::setVAandDV(double va, double dv)
+{
     va = va;
     dv = dv;
 }
 
-
 void MotorControl::setWriteValues(double leftWrite, double rightWrite)
 {
+    if (leftWrite < 0)
+    {
+        setDirection(0, 0);
+        leftWrite *= -1;
+    }
+    else
+    {
+        setDirection(0, 1);
+    }
+
+    if (rightWrite < 0)
+    {
+        setDirection(1, 1);
+        rightWrite *= -1;
+    }
+    else
+    {
+        setDirection(1, 0);
+    }
+
     if (leftWrite > 255)
     {
         leftWrite = 255;
@@ -282,16 +299,11 @@ void MotorControl::setWriteValues(double leftWrite, double rightWrite)
     analogWrite(_rightVoltagePin, _rightWriteValue);
 }
 
-
 double MotorControl::calculateMetersPerSecond(int countsRotated, int lastCountsRotated, int numMilliSeconds)
 {
-    double numRotations = (double)(countsRotated - lastCountsRotated) / 800.0;
-    double rotationsPerMinute = numRotations * (numMilliSeconds / 1000.0) * 60.0;
-
-    // Serial.println((String)countsRotated + "\t" + (String)lastCountsRotated + "\t" + (String)numRotations + "\t" + (String)rotationsPerMinute + "\t" + (String)(rotationsPerMinute * 0.00764));
-
-    // return rotationsPerMinute;
-    return rotationsPerMinute * 0.3; // THIS IS M/S USING A WHEEL DIAMETER OF 14.6 CM, CAN BE CHANGED
+    double metersTravelled = (double)(countsRotated - lastCountsRotated) * 0.000561;
+    double metersPerSecond = metersTravelled / ((double)numMilliSeconds / 1000.0);
+    return metersPerSecond;
 }
 
 // returns motor angle in radians

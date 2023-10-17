@@ -91,12 +91,19 @@ void setup()
 
   vaTarget = 4;
   dvTarget = 0;
+
+  movement.moveAtSpeed(1, 1);
 }
 
 void loop()
 {
   if (lastCount != count)
   {
+    if (position.getRho() > 1)
+    {
+      dvTarget = 0;
+      vaTarget = 0;
+    }
 
     // do four times a second
     if (count % 25 == 0)
@@ -112,20 +119,15 @@ void loop()
       // Update values read from and programmed to motor
       taskLED.onLED();
 
-      if (position.getRho() > 1) {
-        dvTarget = 0;
-        vaTarget = 0;
-      }
-
       motorController.updateMotorValues(100);
-      movement.setVAandDV(vaTarget, dvTarget);
-      position.updatePosition(0.1, motorController.getLeftVelocity(), motorController.getRightVelocity());
+      movement.updateMovement(100);
+      //movement.setVAandDV(vaTarget, dvTarget);
+      position.updatePosition(100, motorController.getLeftVelocity(), motorController.getRightVelocity());
       taskLED.offLED();
     }
 
     if (count % 25 == 2)
     {
-      
     }
 
     // do every second
@@ -134,10 +136,10 @@ void loop()
       taskLED.onLED();
       // TEST PRINTS
       // Serial.println("1 second has passed");
-      // Serial.println("Left count: " + (String)motorController.getLeftCount() + ", Right count: " + (String)motorController.getRightCount());
+      Serial.println("Left count: " + (String)motorController.getLeftCount() + ", Right count: " + (String)motorController.getRightCount());
       // Serial.println("Seconds passed: " + (String)secondsSinceStartup);
-      // Serial.println("Left m/s: " + (String)(motorController.getLeftVelocity()) + ", Right m/s: " + (String)(motorController.getRightVelocity()));
-      Serial.println("Left Voltage: " + (String)((double)motorController.getLeftWriteValue()/255.0*8.0) + ", Right Voltage: " + (String)((double)motorController.getRightWriteValue()/255.0*8.0));
+      Serial.println("Left m/s: " + (String)(motorController.getLeftVelocity()) + ", Right m/s: " + (String)(motorController.getRightVelocity()));
+      Serial.println("Left Voltage: " + (String)((double)motorController.getLeftWriteValue() / 255.0 * 8.0) + ", Right Voltage: " + (String)((double)motorController.getRightWriteValue() / 255.0 * 8.0));
       Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", rho: " + (String)(position.getRho()) + ", phi: " + (String)(position.getPhi()));
       Serial.println("Left pos: " + (String)(motorController.getLeftPosition() / PI) + " pi, Right pos: " + (String)(motorController.getRightPosition() / PI) + " pi");
       // Serial.println("Position goal: " + (String)(positionTarget / PI) + "  pi\n");
@@ -171,7 +173,7 @@ void rightPinInterrupt()
   motorController.rightPinInterrupt();
 }
 
-void piCommsInterrupt(int howMany) 
+void piCommsInterrupt(int howMany)
 {
   piCommunication.receive(howMany);
 }
