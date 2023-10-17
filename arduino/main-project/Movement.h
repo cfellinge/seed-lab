@@ -12,8 +12,11 @@
 
 class Movement
 {
+    MotorControl& mc;
+    PositionMath& pos;
+
 public:
-    Movement(MotorControl motorController, PositionMath positionMath);
+    Movement(MotorControl &motorController, PositionMath &positionMath);
 
     // rotates the robot, moves to coordinates (x, y) (meters), and rotates the robot to face phi (radians)
     void moveToCoordinates(double x, double y, double phi);
@@ -50,6 +53,8 @@ public:
     double getVA();
 
 private:
+
+
 };
 
 #endif

@@ -6,14 +6,17 @@
 #include "Arduino.h"
 #include "Movement.h"
 
-MotorControl mc(0);
-PositionMath pos(0.33);
+// MotorControl mc(0);
+// PositionMath pos;
 
 double forwardVel;
 double rotationalVel;
 
 double forwardVelTarget;
 double rotationalVelTarget;
+
+double xTarget;
+double yTarget;
 double rhoTarget;
 double phiTarget;
 
@@ -32,8 +35,8 @@ double KI_VEL_OUTER = 0.5;
 
 double KP_SPIN_INNER = 10;
 
-double KP_SPIN_OUTER = 1;
-double KI_SPIN_OUTER = 0.1;
+double KP_SPIN_OUTER = 10;
+double KI_SPIN_OUTER = 0.5;
 
 
 double velIntegralError = 0;
@@ -45,15 +48,14 @@ double ROBOT_MAX_SPEED = 0.5;
 // max rotational velocity of robot, rad/s
 double ROBOT_MAX_SPIN = 0.5;
 
-Movement::Movement(MotorControl motorController, PositionMath positionMath)
+Movement::Movement(MotorControl& motorController, PositionMath& positionMath) : mc(motorController), pos(positionMath)
 {
-    mc = motorController;
-    pos = positionMath;
 }
 
 void Movement::moveToCoordinates(double x, double y, double phi)
 {
-    rhoTarget = sqrt(pow(x, 2) + pow(y, 2));
+    xTarget = x;
+    yTarget = y;
     phiTarget = phi;
 }
 
@@ -70,10 +72,14 @@ void Movement::updateMovement(double numMilliseconds)
     forwardVel = WHEEL_RADIUS * (leftVel + rightVel) / 2;
     rotationalVel = WHEEL_RADIUS * (leftVel - rightVel) / 2;
 
-    va = velOuterIntegralControl(pos.getRho(), rhoTarget, forwardVel, numMilliseconds);
+    // double rho_actual = pos.getRho();
+    // double rho_desired = 
+
+    // va = velOuterIntegralControl(pos.getRho(), rhoTarget, forwardVel, numMilliseconds);
+    va = 0;
     dv = angularVelOuterIntegralControl(pos.getPhi(), phiTarget, rotationalVel, numMilliseconds);
 
-    driveMotor(va, 0);
+    driveMotor(va, dv);
 }
 
 void Movement::moveForwards(double distance)
@@ -141,7 +147,7 @@ double Movement::angularVelOuterIntegralControl(double phi, double phi_desired, 
     // PI block
     double angularVelPosError = phi_desired - phi; // radians
 
-    angularVelIntegralError = angularVelIntegralError + angularVelPosError * (double)millisecondInterval / 1000.0;
+    angularVelIntegralError = angularVelIntegralError + angularVelPosError * (double)millisecondInterval / 1000.0; // radians * seconds
     
     double desiredSpeed = KP_SPIN_OUTER * angularVelPosError + KI_SPIN_OUTER * angularVelIntegralError;
     
@@ -198,6 +204,7 @@ void Movement::rotateLeft(double angle, int millisecondInterval)
 // takes in Va and deltaV, both in volts
 void Movement::driveMotor(double va, double dv)
 {
+    // convert volts to write values
     va = va * 255.0 / 8.0;
     dv = dv * 255.0 / 8.0;
 

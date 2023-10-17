@@ -94,7 +94,7 @@ void setup()
 
   // movement.moveAtSpeed(1, 1);
   // movement.moveForwards(1);
-  movement.moveToCoordinates(1, 0, 0); 
+  movement.moveToCoordinates(0, 0, 2*PI); 
 }
 
 void loop()
@@ -146,14 +146,16 @@ void loop()
       Serial.println("Left Voltage: " + (String)((double)motorController.getLeftWriteValue() / 255.0 * 8.0) + ", Right Voltage: " + (String)((double)motorController.getRightWriteValue() / 255.0 * 8.0));
       Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", rho: " + (String)(position.getRho()) + ", phi: " + (String)(position.getPhi()));
       Serial.println("Left pos: " + (String)(motorController.getLeftPosition() / PI) + " pi, Right pos: " + (String)(motorController.getRightPosition() / PI) + " pi");
+      Serial.println("VA: " + (String)movement.getVA() + ", DV: " + (String)movement.getDV());
       // Serial.println("Position goal: " + (String)(positionTarget / PI) + "  pi\n");
-      Serial.println("Forwards velocity: " + (String)movement.getForwardVel() + ", Rotational velocity: " + (String)movement.getRotationalVel() + "\n");
+      Serial.println("Forwards velocity: " + (String)movement.getForwardVel() + ", Rotational velocity: " + (String)movement.getRotationalVel());
+      Serial.println("\n");
       secondsSinceStartup++;
       taskLED.offLED();
     }
 
     // do every 5 seconds
-    if (count == 499)
+    if (count == 500)
     {
       taskLED.onLED();
       count = 0;

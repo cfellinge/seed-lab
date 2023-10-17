@@ -77,9 +77,6 @@ double PositionMath::calculateY(double yOld, double deltaT, double phiOld, doubl
 double PositionMath::calculatePhi(double phiOld, double deltaT, double wheelBaseWidth, double velocityLeft, double velocityRight)
 {
     double phiTemp = phiOld + deltaT * (velocityLeft - velocityRight) / wheelBaseWidth;
-    if (phiTemp > 6.283)
-        phiTemp = 0;
-    if (phiTemp < 0)
-        phiTemp = 6.283;
+
     return phiTemp;
 }
