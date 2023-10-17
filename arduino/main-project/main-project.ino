@@ -32,7 +32,7 @@ StatusLEDControl taskLED(11);
 
 MotorControl motorController(0);
 PositionMath position(wheelbaseWidth);
-Movement movement(motorController);
+Movement movement(motorController, position);
 
 PiCommunication piCommunication;
 
@@ -82,17 +82,18 @@ void setup()
 
   motorController.setMotorMode(0);
 
-  motorController.setDirection(0, 1);
-  motorController.setDirection(1, 0);
+  // motorController.setDirection(0, 1);
+  // motorController.setDirection(1, 0);
   // motorController.setVelocities(0.1, 0.1);
 
   // motorController.setVelocities(2.6, 2.6);
   // motorController.setPositions(1.6, 0);
 
-  vaTarget = 4;
-  dvTarget = 0;
+  // vaTarget = 4;
+  // dvTarget = 0;
 
-  movement.moveAtSpeed(1, 1);
+  // movement.moveAtSpeed(1, 1);
+  movement.moveForwards(1);
 }
 
 void loop()

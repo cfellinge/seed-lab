@@ -8,11 +8,12 @@
 
 #include "Arduino.h"
 #include "MotorControl.h"
+#include "PositionMath.h"
 
 class Movement
 {
 public:
-    Movement(MotorControl motorController);
+    Movement(MotorControl motorController, PositionMath positionMath);
 
     // rotates the robot, moves to coordinates (x, y) (meters), and rotates the robot to face phi (radians)
     void moveToCoordinates(double x, double y, double phi);
@@ -28,7 +29,7 @@ public:
     // set each wheel to a certain number of radians
     void setRotations(double leftPosition, double rightPosition);
 
-    double velOuterIntegralControl(double rho, double rho_desired);
+    double velOuterIntegralControl(double rho, double rho_desired, double vel_actual, int millisecondInterval);
 
     double velInnerProportionalControl(double vel_actual, double vel_desired);
 
