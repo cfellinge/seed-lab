@@ -67,10 +67,6 @@ double _rightPosError;
 double _rawLeftWriteValue;
 double _rawRightWriteValue;
 
-// demo 1 variables
-
-double va;
-double dv;
 
 // default constructor
 MotorControl::MotorControl(int initalMode)
@@ -135,130 +131,15 @@ void MotorControl::updateMotorValues(int millisecondInterval)
 
     _leftLastCount = _leftCount;
     _rightLastCount = _rightCount;
-
-    // Serial.println((String)_leftVelocity + "\t" + (String)_rightVelocity);
-
-    // feedback control code goes here
-    // inputs: _leftVelocity, _targetLeftVelocity
-    // output: _leftWriteValue (0 - 255)
-
-    if (_motorMode == 0)
-    {
-        // _leftWriteValue = 0;
-        // _rightWriteValue = 0;
-    }
-
-    // velocity control, proportional (bad)
-    else if (_motorMode == 1)
-    {
-        if (abs(_leftVelocity) < (_targetLeftVelocity - 0.05))
-        {
-            _leftWriteValue += 2;
-        }
-        if (abs(_leftVelocity) > (_targetLeftVelocity + 0.05))
-        {
-            _leftWriteValue -= 2;
-        }
-        if (abs(_rightVelocity) < (_targetRightVelocity - 0.05))
-        {
-            _rightWriteValue += 2;
-        }
-        if (abs(_rightVelocity) > (_targetRightVelocity + 0.05))
-        {
-            _rightWriteValue -= 2;
-        }
-    }
-
-    // positional control, PID tuned (good)
-    else if (_motorMode == 2)
-    {
-        if (_leftPosition > _targetLeftPosition)
-        {
-            setDirection(0, 0);
-        }
-        else
-        {
-            setDirection(0, 1);
-        }
-
-        if (_rightPosition < _targetRightPosition)
-        {
-            setDirection(1, 0);
-        }
-        else
-        {
-            setDirection(1, 1);
-        }
-
-        _leftPosError = abs(_targetLeftPosition - _leftPosition);
-        _leftIntegralError = _leftIntegralError + _leftPosError * (double)millisecondInterval / 1000;
-        double _leftDesiredSpeed = _KP * _leftPosError + _KI * _leftIntegralError;
-        double _leftError = _leftDesiredSpeed - _leftVelocity;
-        _leftWriteValue = _KP * _leftError;
-
-        if (_leftWriteValue > 255)
-        {
-            _leftWriteValue = 255;
-
-            if (_leftError > 255.0 / _KP)
-            {
-                _leftError = 255.0 / _KP;
-            }
-
-            _leftIntegralError = (_leftWriteValue - _KP * _leftError) / _KI;
-        }
-
-        _rightPosError = abs(_targetRightPosition - _rightPosition);
-        _rightIntegralError = _rightIntegralError + _rightPosError * (double)millisecondInterval / 1000;
-        double _rightDesiredSpeed = _KP * _rightPosError + _KI * _rightIntegralError;
-        double _rightError = _rightDesiredSpeed - _rightVelocity;
-        _rightWriteValue = _KP * _rightError;
-
-        if (_rightWriteValue > 255)
-        {
-            _rightWriteValue = 255;
-
-            if (_rightError > 255.0 / _KP)
-            {
-                _rightError = 255.0 / _KP;
-            }
-
-            _rightIntegralError = (_rightWriteValue - _KP * _rightError) / _KI;
-        }
-    }
-
-    // accept a raw write value
-    else if (_motorMode == 3)
-    {
-        _leftWriteValue = _rawLeftWriteValue;
-        _rightWriteValue = _rawRightWriteValue;
-    }
-
-    // demo 1 setup
-    else if (_motorMode == 4)
-    {
-    }
-
-    // Serial.println("Left Goal: " + (String)_targetLeftPosition + ", Actual: " + (String)_leftPosition + ", Write Value: " +  (String)_leftWriteValue + ", Direction: " + (String)digitalRead(PIN7));
-
-    // check that write values are within hard bounds
-
-    // write to motors
-    setWriteValues(_leftWriteValue, _rightWriteValue);
-}
-
-void MotorControl::setVAandDV(double va, double dv)
-{
-    va = va;
-    dv = dv;
 }
 
 void MotorControl::setWriteValues(double leftWrite, double rightWrite)
 {
+    // set direction based on +/- voltage inputs
     if (leftWrite < 0)
     {
         setDirection(0, 0);
-        leftWrite *= -1;
+        leftWrite = -leftWrite;
     }
     else
     {
@@ -268,13 +149,14 @@ void MotorControl::setWriteValues(double leftWrite, double rightWrite)
     if (rightWrite < 0)
     {
         setDirection(1, 1);
-        rightWrite *= -1;
+        rightWrite = -rightWrite;
     }
     else
     {
         setDirection(1, 0);
     }
 
+    // check values bounded
     if (leftWrite > 255)
     {
         leftWrite = 255;

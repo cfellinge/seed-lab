@@ -93,7 +93,8 @@ void setup()
   // dvTarget = 0;
 
   // movement.moveAtSpeed(1, 1);
-  movement.moveForwards(1);
+  // movement.moveForwards(1);
+  movement.moveToCoordinates(1, 0, 0); 
 }
 
 void loop()
@@ -121,9 +122,11 @@ void loop()
       taskLED.onLED();
 
       motorController.updateMotorValues(100);
+      
       movement.updateMovement(100);
-      //movement.setVAandDV(vaTarget, dvTarget);
+
       position.updatePosition(100, motorController.getLeftVelocity(), motorController.getRightVelocity());
+
       taskLED.offLED();
     }
 
@@ -137,7 +140,7 @@ void loop()
       taskLED.onLED();
       // TEST PRINTS
       // Serial.println("1 second has passed");
-      Serial.println("Left count: " + (String)motorController.getLeftCount() + ", Right count: " + (String)motorController.getRightCount());
+      // Serial.println("Left count: " + (String)motorController.getLeftCount() + ", Right count: " + (String)motorController.getRightCount());
       // Serial.println("Seconds passed: " + (String)secondsSinceStartup);
       Serial.println("Left m/s: " + (String)(motorController.getLeftVelocity()) + ", Right m/s: " + (String)(motorController.getRightVelocity()));
       Serial.println("Left Voltage: " + (String)((double)motorController.getLeftWriteValue() / 255.0 * 8.0) + ", Right Voltage: " + (String)((double)motorController.getRightWriteValue() / 255.0 * 8.0));
@@ -156,7 +159,6 @@ void loop()
       count = 0;
 
       // motorController.setPositions(positionTarget, positionTarget);
-      motorController.setVAandDV(0, 0);
       taskLED.offLED();
     }
 

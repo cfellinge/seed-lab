@@ -29,9 +29,12 @@ public:
     // set each wheel to a certain number of radians
     void setRotations(double leftPosition, double rightPosition);
 
+    // feedback control loops:
     double velOuterIntegralControl(double rho, double rho_desired, double vel_actual, int millisecondInterval);
-
     double velInnerProportionalControl(double vel_actual, double vel_desired);
+
+    double angularVelOuterIntegralControl(double phi, double phi_desired, double angularVel, int millisecondInterval);
+    double angularVelInnerProportionalControl(double angularVel_actual, double angularVel_desired);
 
     // rotate the robot a set angle (radians)
     void rotateLeft(double angle, int millisecondInterval);
@@ -41,6 +44,10 @@ public:
 
     double getForwardVel();
     double getRotationalVel();
+
+    double getDV();
+
+    double getVA();
 
 private:
 };
