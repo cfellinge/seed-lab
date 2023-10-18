@@ -28,39 +28,73 @@ double WHEEL_RADIUS = 0.0725;
 double leftWriteValue;
 double rightWriteValue;
 
-double KP_VEL_INNER = 10;
+enum MODE
+{
+    GO_TO_COORDINATES,
+    ROTATE_TO_ANGLE,
+    STAY_STILL,
+    NO_FEEDBACK_CONTROLS
+};
 
-double KP_VEL_OUTER = 10;
-double KI_VEL_OUTER = 0.5;
+MODE mode;
 
-double KP_SPIN_INNER = 10;
+// VA
+double KP_VEL_INNER = 1;
+double KP_VEL_OUTER = 3;
+double KI_VEL_OUTER = 0.02;
 
+
+// DV - straight line
+double KP_SPIN_INNER = 0.5;
 double KP_SPIN_OUTER = 10;
-double KI_SPIN_OUTER = 0.5;
+double KI_SPIN_OUTER = 0.2;
 
+// DV - spin in circle
+// double KP_SPIN_INNER = 5;
+// double KP_SPIN_OUTER = 10;
+// double KI_SPIN_OUTER = 0.2;
 
 double velIntegralError = 0;
 double angularVelIntegralError = 0;
 
 // max speed of robot, m/s
-double ROBOT_MAX_SPEED = 0.5;
+double ROBOT_MAX_SPEED = 0.7;
 
 // max rotational velocity of robot, rad/s
 double ROBOT_MAX_SPIN = 0.5;
 
-Movement::Movement(MotorControl& motorController, PositionMath& positionMath) : mc(motorController), pos(positionMath)
+Movement::Movement(MotorControl &motorController, PositionMath &positionMath) : mc(motorController), pos(positionMath)
 {
 }
 
+// works
 void Movement::moveToCoordinates(double x, double y, double phi)
 {
+    mode = GO_TO_COORDINATES;
     xTarget = x;
     yTarget = y;
     phiTarget = phi;
 }
 
+void Movement::moveForwards(double distance)
+{
+    mode = GO_TO_COORDINATES;
+    xTarget = distance * sin(pos.getPhi());
+    yTarget = distance * cos(pos.getPhi());
+    phiTarget = pos.getPhi();
+}
+
+void Movement::rotateLeft(double angle)
+{
+    mode = ROTATE_TO_ANGLE;
+    phiTarget = angle;
+    Serial.println("PHI TARGET IS " + (String)phiTarget);
+}
+
+// doesn't work
 void Movement::moveAtSpeed(double leftSpeed, double rightSpeed)
 {
+    mode = NO_FEEDBACK_CONTROLS;
     forwardVelTarget = leftSpeed;
 }
 
@@ -72,24 +106,41 @@ void Movement::updateMovement(double numMilliseconds)
     forwardVel = WHEEL_RADIUS * (leftVel + rightVel) / 2;
     rotationalVel = WHEEL_RADIUS * (leftVel - rightVel) / 2;
 
-    // double rho_actual = pos.getRho();
-    // double rho_desired = 
+    double rhoActual = pos.getRho();
+    double phiActual = pos.getPhi();
 
-    // va = velOuterIntegralControl(pos.getRho(), rhoTarget, forwardVel, numMilliseconds);
-    va = 0;
-    dv = angularVelOuterIntegralControl(pos.getPhi(), phiTarget, rotationalVel, numMilliseconds);
+    switch (mode)
+    {
+    case GO_TO_COORDINATES:
+        rhoTarget = sqrt(pow(xTarget, 2) + pow(yTarget, 2));
+        
+        phiTarget = atan2(yTarget - pos.getY(), xTarget - pos.getX());
 
+        va = velOuterIntegralControl(rhoActual, rhoTarget, forwardVel, numMilliseconds);
+        dv = angularVelOuterIntegralControl(phiActual, phiTarget, rotationalVel, numMilliseconds);
+        break;
+
+    case ROTATE_TO_ANGLE:
+        rhoTarget = pos.getRho();
+        phiTarget = phiTarget;
+        va = velOuterIntegralControl(rhoActual, rhoTarget, forwardVel, numMilliseconds);
+        dv = angularVelOuterIntegralControl(phiActual, phiTarget, rotationalVel, numMilliseconds);
+        break;
+
+    case STAY_STILL:
+        va = velOuterIntegralControl(rhoActual, rhoActual, forwardVel, numMilliseconds);
+        dv = angularVelOuterIntegralControl(phiActual, phiActual, rotationalVel, numMilliseconds);
+        break;
+
+    case NO_FEEDBACK_CONTROLS:
+        break;
+    }
+
+    // dv = 0;
+    // Serial.println("VA: " + (String)va + " DV: " + (String)dv);
     driveMotor(va, dv);
 }
 
-void Movement::moveForwards(double distance)
-{
-    rhoTarget = distance;
-}
-
-void Movement::setRotations(double leftPosition, double rightPosition)
-{
-}
 
 double Movement::velOuterIntegralControl(double rho, double rho_desired, double vel, int millisecondInterval)
 {
@@ -108,6 +159,18 @@ double Movement::velOuterIntegralControl(double rho, double rho_desired, double 
         if (velError > ROBOT_MAX_SPEED / KP_VEL_OUTER)
         {
             velError = ROBOT_MAX_SPEED / KP_VEL_OUTER;
+        }
+
+        velIntegralError = (vel_desired - KP_VEL_OUTER * velError) / KI_VEL_OUTER;
+    }
+
+    if (vel_desired < -ROBOT_MAX_SPEED)
+    {
+        vel_desired = -ROBOT_MAX_SPEED;
+
+        if (velError < -ROBOT_MAX_SPEED / KP_VEL_OUTER)
+        {
+            velError = -ROBOT_MAX_SPEED / KP_VEL_OUTER;
         }
 
         velIntegralError = (vel_desired - KP_VEL_OUTER * velError) / KI_VEL_OUTER;
@@ -148,11 +211,11 @@ double Movement::angularVelOuterIntegralControl(double phi, double phi_desired, 
     double angularVelPosError = phi_desired - phi; // radians
 
     angularVelIntegralError = angularVelIntegralError + angularVelPosError * (double)millisecondInterval / 1000.0; // radians * seconds
-    
+
     double desiredSpeed = KP_SPIN_OUTER * angularVelPosError + KI_SPIN_OUTER * angularVelIntegralError;
-    
+
     double angularVelError = desiredSpeed - angularVel;
-    
+
     double angularVel_desired = KP_SPIN_OUTER * angularVelError;
 
     // integral windup block
@@ -163,6 +226,18 @@ double Movement::angularVelOuterIntegralControl(double phi, double phi_desired, 
         if (angularVelError > ROBOT_MAX_SPIN / KP_SPIN_OUTER)
         {
             angularVelError = ROBOT_MAX_SPIN / KP_SPIN_OUTER;
+        }
+
+        angularVelIntegralError = (angularVel_desired - KP_SPIN_OUTER * angularVelError) / KI_SPIN_OUTER;
+    }
+
+    if (angularVel_desired < -ROBOT_MAX_SPIN)
+    {
+        angularVel_desired = -ROBOT_MAX_SPIN;
+
+        if (angularVelError < -ROBOT_MAX_SPIN / KP_SPIN_OUTER)
+        {
+            angularVelError = -ROBOT_MAX_SPIN / KP_SPIN_OUTER;
         }
 
         angularVelIntegralError = (angularVel_desired - KP_SPIN_OUTER * angularVelError) / KI_SPIN_OUTER;
@@ -179,8 +254,8 @@ double Movement::angularVelInnerProportionalControl(double angularVel_actual, do
 {
     // P block
     double error = angularVel_desired - angularVel_actual; // rad/s
-    double kError = error * KP_SPIN_INNER; // volts
-    double kErrorBounded = kError; // volts
+    double kError = error * KP_SPIN_INNER;                 // volts
+    double kErrorBounded = kError;                         // volts
 
     // bounding block
     if (kErrorBounded > 8)
@@ -195,10 +270,6 @@ double Movement::angularVelInnerProportionalControl(double angularVel_actual, do
     double dv = kErrorBounded;
 
     return dv;
-}
-
-void Movement::rotateLeft(double angle, int millisecondInterval)
-{
 }
 
 // takes in Va and deltaV, both in volts
@@ -224,10 +295,22 @@ double Movement::getRotationalVel()
     return rotationalVel;
 }
 
-double Movement::getDV() {
+double Movement::getDV()
+{
     return dv;
 }
 
-double Movement::getVA() {
+double Movement::getVA()
+{
     return va;
+}
+
+double Movement::getRhoTarget()
+{
+    return rhoTarget;
+}
+
+double Movement::getPhiTarget()
+{
+    return phiTarget;
 }

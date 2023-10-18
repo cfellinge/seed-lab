@@ -40,7 +40,7 @@ public:
     double angularVelInnerProportionalControl(double angularVel_actual, double angularVel_desired);
 
     // rotate the robot a set angle (radians)
-    void rotateLeft(double angle, int millisecondInterval);
+    void rotateLeft(double angle);
 
     // step response test for demo 1
     void driveMotor(double va, double dv);
@@ -51,6 +51,10 @@ public:
     double getDV();
 
     double getVA();
+
+    double getRhoTarget();
+
+    double getPhiTarget();
 
 private:
 

@@ -184,6 +184,7 @@ void MotorControl::setWriteValues(double leftWrite, double rightWrite)
 double MotorControl::calculateMetersPerSecond(int countsRotated, int lastCountsRotated, int numMilliSeconds)
 {
     double metersTravelled = (double)(countsRotated - lastCountsRotated) * 0.000561;
+    metersTravelled = metersTravelled * 1.052; // adjustment value
     double metersPerSecond = metersTravelled / ((double)numMilliSeconds / 1000.0);
     return metersPerSecond;
 }
