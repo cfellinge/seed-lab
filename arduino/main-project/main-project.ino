@@ -25,7 +25,7 @@ int motorEncoderRightA = 3;
 int secondsSinceStartup = 0;
 
 // wheelbase width in meters
-double wheelbaseWidth = 0.33;
+double wheelbaseWidth = 0.37;
 
 StatusLEDControl clockLED(13);
 StatusLEDControl taskLED(11);
@@ -36,11 +36,11 @@ Movement movement(motorController, position);
 
 PiCommunication piCommunication;
 
-double velocityTarget = 1;
-double positionTarget = 0;
-
-double vaTarget = 0;
-double dvTarget = 0;
+// demo1 temp variables
+int demo1TrialMode = 0;
+double targetMeters;
+double targetRadians;
+int stallCounter = 0;
 
 ISR(TIMER2_COMPA_vect)
 {
@@ -80,19 +80,26 @@ void setup()
   Serial.println("Beginning main loop:");
   Serial.println("--------------------------------------------------------------------------");
 
-  motorController.setMotorMode(0);
+  demo1TrialMode = 2;
 
-  // TRIAL 1:
-  // double targetFeet = 7;
+  if (demo1TrialMode == 1)
+  {
+    // TRIAL 1:
+    double targetFeet = 7;
 
-  // double targetMeters = targetFeet / 3.281; 
-  // movement.moveForwards(targetMeters);
-  
-  // TRIAL 2:
-  double targetDegrees = 90.0;
+    targetMeters = targetFeet / 3.281;
+    movement.moveForwards(targetMeters);
+  }
+  else if (demo1TrialMode == 2)
+  {
+    // TRIAL 2:
+    double targetDegrees = 90;
+    double targetFeet = 2;
 
-  double targetRadians = (targetDegrees * PI) / 180.0;
-  movement.rotateLeft(targetRadians);
+    targetRadians = (targetDegrees * PI) / 180.0;
+    movement.rotateLeft(targetRadians);
+    targetMeters = targetFeet / 3.281;
+  }
 
   // TRIAL 3:
 }
@@ -101,12 +108,6 @@ void loop()
 {
   if (lastCount != count)
   {
-    if (position.getRho() > 1)
-    {
-      dvTarget = 0;
-      vaTarget = 0;
-    }
-
     // do four times a second
     if (count % 25 == 0)
     {
@@ -122,10 +123,37 @@ void loop()
       taskLED.onLED();
 
       motorController.updateMotorValues(20);
-      
+
       movement.updateMovement(20);
 
       position.updatePosition(20, motorController.getLeftVelocity(), motorController.getRightVelocity());
+
+      if (demo1TrialMode == 1)
+      {
+        // TRIAL 1:
+        if (abs(position.getRho() - targetMeters) < 0.001)
+        {
+          stallCounter++;
+        }
+        if (stallCounter > 100)
+        {
+          movement.stop();
+        }
+      }
+      else if (demo1TrialMode == 2)
+      {
+        // trial 3
+        if (abs(position.getPhi() - targetRadians) < 0.01)
+        {
+          stallCounter++;
+        }
+        if (stallCounter > 100)
+        {
+          stallCounter = 0;
+          demo1TrialMode = 1;
+          movement.moveForwards(targetMeters);
+        }
+      }
 
       taskLED.offLED();
     }
@@ -140,35 +168,37 @@ void loop()
       taskLED.onLED();
       // TEST PRINTS
       Serial.println("1 second has passed");
-      
+
       // COUNTS
       Serial.println("Left count: " + (String)motorController.getLeftCount() + ", Right count: " + (String)motorController.getRightCount());
-      
+
       // SECONDS PASSED
       Serial.println("Seconds passed: " + (String)secondsSinceStartup);
-      
+
       // M/S
       Serial.println("Left m/s: " + (String)(motorController.getLeftVelocity()) + ", Right m/s: " + (String)(motorController.getRightVelocity()));
-      
+
       // VOLTAGE
       Serial.println("Left Voltage: " + (String)((double)motorController.getLeftWriteValue() / 255.0 * 8.0) + ", Right Voltage: " + (String)((double)motorController.getRightWriteValue() / 255.0 * 8.0));
-      
+
       // X, Y, PHI
       Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", rho: " + (String)(position.getRho()) + ", phi: " + (String)(position.getPhi() / PI) + " pi");
-      
+
       // WHEEL POSITIONS
       // Serial.println("Left pos: " + (String)(motorController.getLeftPosition() / PI) + " pi, Right pos: " + (String)(motorController.getRightPosition() / PI) + " pi");
-      
+
       // VA, DV
       Serial.println("VA: " + (String)movement.getVA() + ", DV: " + (String)movement.getDV());
-      
+
       // RHO, PHI TARGETS
-      Serial.println("Rho goal: " + (String)movement.getRhoTarget() + ", Phi goal: " + (String)(movement.getPhiTarget() / PI) +" pi");
-      
+      Serial.println("Rho goal: " + (String)movement.getRhoTarget() + ", Phi goal: " + (String)(movement.getPhiTarget() / PI) + " pi");
+
+      // X, Y TARGETS
+      Serial.println("X goal: " + (String)movement.getXTarget() + ", Y goal: " + (String)(movement.getYTarget()));
+
       // FORWARD, ROTATIONAL VELOCITY
       Serial.println("Forwards velocity: " + (String)movement.getForwardVel() + ", Rotational velocity: " + (String)movement.getRotationalVel());
-      
-      
+
       Serial.println("\n");
 
       // if (secondsSinceStartup < 10) Serial.println((String)count + "\t" + (String)(movement.getForwardVel() * 1000) + "\t" + (String)(position.getRho() * 1000));
@@ -176,8 +206,8 @@ void loop()
       taskLED.offLED();
     }
 
-
-    if (count % 100 == 0) {
+    if (count % 100 == 0)
+    {
       secondsSinceStartup++;
     }
 

@@ -39,20 +39,20 @@ enum MODE
 MODE mode;
 
 // VA
-double KP_VEL_INNER = 1;
-double KP_VEL_OUTER = 3;
-double KI_VEL_OUTER = 0.02;
+double KP_VEL_INNER = 6;
+double KP_VEL_OUTER = 4;
+double KI_VEL_OUTER = 0.04;
 
 
 // DV - straight line
-double KP_SPIN_INNER = 0.5;
-double KP_SPIN_OUTER = 10;
-double KI_SPIN_OUTER = 0.2;
-
-// DV - spin in circle
-// double KP_SPIN_INNER = 5;
+// double KP_SPIN_INNER = 0.5;
 // double KP_SPIN_OUTER = 10;
 // double KI_SPIN_OUTER = 0.2;
+
+// DV - spin in circle
+double KP_SPIN_INNER = 5;
+double KP_SPIN_OUTER = 5;
+double KI_SPIN_OUTER = 0.2;
 
 double velIntegralError = 0;
 double angularVelIntegralError = 0;
@@ -61,13 +61,14 @@ double angularVelIntegralError = 0;
 double ROBOT_MAX_SPEED = 0.7;
 
 // max rotational velocity of robot, rad/s
-double ROBOT_MAX_SPIN = 0.5;
+double ROBOT_MAX_SPIN = 0.8;
 
 Movement::Movement(MotorControl &motorController, PositionMath &positionMath) : mc(motorController), pos(positionMath)
 {
 }
 
-// works
+// move robot to coordinates (x, y) in meters
+// phi currently does not do anything
 void Movement::moveToCoordinates(double x, double y, double phi)
 {
     mode = GO_TO_COORDINATES;
@@ -76,14 +77,16 @@ void Movement::moveToCoordinates(double x, double y, double phi)
     phiTarget = phi;
 }
 
+// move robot straight forward a set distance (meters)
 void Movement::moveForwards(double distance)
 {
     mode = GO_TO_COORDINATES;
-    xTarget = distance * sin(pos.getPhi());
-    yTarget = distance * cos(pos.getPhi());
+    xTarget = distance * cos(pos.getPhi());
+    yTarget = distance * sin(pos.getPhi());
     phiTarget = pos.getPhi();
 }
 
+// rotate robot to face a set angle (radians)
 void Movement::rotateLeft(double angle)
 {
     mode = ROTATE_TO_ANGLE;
@@ -96,6 +99,10 @@ void Movement::moveAtSpeed(double leftSpeed, double rightSpeed)
 {
     mode = NO_FEEDBACK_CONTROLS;
     forwardVelTarget = leftSpeed;
+}
+
+void Movement::stop() {
+    mode = STAY_STILL;
 }
 
 void Movement::updateMovement(double numMilliseconds)
@@ -114,7 +121,12 @@ void Movement::updateMovement(double numMilliseconds)
     case GO_TO_COORDINATES:
         rhoTarget = sqrt(pow(xTarget, 2) + pow(yTarget, 2));
         
+        phiActual = fmod(phiActual, 2*PI);
         phiTarget = atan2(yTarget - pos.getY(), xTarget - pos.getX());
+
+        // TODO: phiTarget is always (-pi/2, pi/2)
+        // phi can be much greater
+        // robot should be able to turn in circles
 
         va = velOuterIntegralControl(rhoActual, rhoTarget, forwardVel, numMilliseconds);
         dv = angularVelOuterIntegralControl(phiActual, phiTarget, rotationalVel, numMilliseconds);
@@ -309,6 +321,17 @@ double Movement::getRhoTarget()
 {
     return rhoTarget;
 }
+
+double Movement::getXTarget()
+{
+    return xTarget;
+}
+
+double Movement::getYTarget()
+{
+    return yTarget;
+}
+
 
 double Movement::getPhiTarget()
 {

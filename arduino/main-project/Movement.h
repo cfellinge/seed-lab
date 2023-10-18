@@ -24,6 +24,8 @@ public:
     // move motors forward at a constant speed (meters / second)
     void moveAtSpeed(double leftSpeed, double rightSpeed);
 
+    void stop();
+
     void updateMovement(double numMilliseconds);
 
     // move the robot straight forward a set distance (meters)
@@ -53,6 +55,10 @@ public:
     double getVA();
 
     double getRhoTarget();
+
+    double getXTarget();
+
+    double getYTarget();
 
     double getPhiTarget();
 
