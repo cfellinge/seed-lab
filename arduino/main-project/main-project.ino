@@ -80,12 +80,23 @@ void setup()
   Serial.println("Beginning main loop:");
   Serial.println("--------------------------------------------------------------------------");
 
-  demo1TrialMode = 2;
+
+  demo1TrialMode = 1;
+  // CHANGE THIS NUMBER ^^
 
   if (demo1TrialMode == 1)
   {
     // TRIAL 1:
-    double targetFeet = 7;
+    double targetFeet = 9.945;
+    // CHANGE THAT NUMBER ^^^
+    // 1ft => 1.02
+    // 2ft => 2.02
+    // 3ft => 3.015
+    // 4ft => 4.013
+    // 5ft => 5.000
+    // 6ft => 5.975
+
+    // 10ft => 9.93??
 
     targetMeters = targetFeet / 3.281;
     movement.moveForwards(targetMeters);
@@ -93,15 +104,15 @@ void setup()
   else if (demo1TrialMode == 2)
   {
     // TRIAL 2:
-    double targetDegrees = 90;
-    double targetFeet = 2;
+    double targetDegrees = 26.5; // positive turns left, negative turns right
+    double targetFeet = sqrt(5);
+    // CHANGE THOSE NUMBERS ^^
 
     targetRadians = (targetDegrees * PI) / 180.0;
+    targetRadians = targetRadians * -0.96;
     movement.rotateLeft(targetRadians);
     targetMeters = targetFeet / 3.281;
   }
-
-  // TRIAL 3:
 }
 
 void loop()
@@ -142,7 +153,7 @@ void loop()
       }
       else if (demo1TrialMode == 2)
       {
-        // trial 3
+        // trial 2
         if (abs(position.getPhi() - targetRadians) < 0.01)
         {
           stallCounter++;
@@ -151,7 +162,7 @@ void loop()
         {
           stallCounter = 0;
           demo1TrialMode = 1;
-          movement.moveForwards(targetMeters);
+          movement.moveToCoordinates(targetMeters*cos(targetRadians), targetMeters*sin(targetRadians), 0);
         }
       }
 

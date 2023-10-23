@@ -38,24 +38,18 @@ enum MODE
 
 MODE mode;
 
-// VA
+double velIntegralError = 0;
+double angularVelIntegralError = 0;
+
+// VA - go zoom straight
 double KP_VEL_INNER = 6;
 double KP_VEL_OUTER = 4;
-double KI_VEL_OUTER = 0.04;
-
-
-// DV - straight line
-// double KP_SPIN_INNER = 0.5;
-// double KP_SPIN_OUTER = 10;
-// double KI_SPIN_OUTER = 0.2;
+double KI_VEL_OUTER = 0.12;
 
 // DV - spin in circle
 double KP_SPIN_INNER = 5;
 double KP_SPIN_OUTER = 5;
 double KI_SPIN_OUTER = 0.2;
-
-double velIntegralError = 0;
-double angularVelIntegralError = 0;
 
 // max speed of robot, m/s
 double ROBOT_MAX_SPEED = 0.7;
@@ -91,6 +85,8 @@ void Movement::rotateLeft(double angle)
 {
     mode = ROTATE_TO_ANGLE;
     phiTarget = angle;
+    xTarget = pos.getX();
+    yTarget = pos.getY();
     Serial.println("PHI TARGET IS " + (String)phiTarget);
 }
 
@@ -121,7 +117,7 @@ void Movement::updateMovement(double numMilliseconds)
     case GO_TO_COORDINATES:
         rhoTarget = sqrt(pow(xTarget, 2) + pow(yTarget, 2));
         
-        phiActual = fmod(phiActual, 2*PI);
+        //phiActual = fmod(phiActual, 2*PI);
         phiTarget = atan2(yTarget - pos.getY(), xTarget - pos.getX());
 
         // TODO: phiTarget is always (-pi/2, pi/2)
