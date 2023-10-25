@@ -87,7 +87,7 @@ void setup()
   if (demo1TrialMode == 1)
   {
     // TRIAL 1:
-    double targetFeet = 9.945;
+    double targetFeet = 6.97;
     // CHANGE THAT NUMBER ^^^
     // 1ft => 1.02
     // 2ft => 2.02
@@ -95,8 +95,10 @@ void setup()
     // 4ft => 4.013
     // 5ft => 5.000
     // 6ft => 5.975
-
-    // 10ft => 9.93??
+    // 7ft => 6.97
+    // 8ft => 7.965
+    // 9ft => 8.96
+    // 10ft => 9.95
 
     targetMeters = targetFeet / 3.281;
     movement.moveForwards(targetMeters);
@@ -104,8 +106,9 @@ void setup()
   else if (demo1TrialMode == 2)
   {
     // TRIAL 2:
-    double targetDegrees = 26.5; // positive turns left, negative turns right
-    double targetFeet = sqrt(5);
+    double targetDegrees = 180; // positive turns left, negative turns right
+    double targetFeet = 1.04;
+    // + 0.02 to distance from table
     // CHANGE THOSE NUMBERS ^^
 
     targetRadians = (targetDegrees * PI) / 180.0;
