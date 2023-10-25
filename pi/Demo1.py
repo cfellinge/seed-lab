@@ -17,21 +17,20 @@ from cv2 import aruco
 
 lcdlock = threading.Lock()
 
+mtx = np.array([[643.93340907,0,319.16113039],
+                [0,644.2645585,242.2359518 ],
+                [0,0,1]])
+
+dist = np.array([[ 0.03804058, -0.36938373,  0.00158751, 0.0083502, -0.36594211]])
+
 def lcdPrint():
-    
-    # Write Quadrant to the i2c bus
-    offset=1
-    try:
-        smbus.write_byte_data(ARD_ADDR,offset,Quadrant)
-    except:
-        print("Not able to communicate")
     
     # Display LCD
     lcdlock.acquire()
     lcd.clear()
     lcd.color = [100,0,0]
     time.sleep(.1)
-    lcd.message = "Goal Position:\n"+str(wheelPosition[Quadrant][0])+" "+str(wheelPosition[Quadrant][1])
+    lcd.message = "Angle:\n"+str(angleDegree)
     lcdlock.release()
 
 # I2C address of the Arduino, set in Arduino sketch
@@ -57,7 +56,7 @@ camera.set(cv2.CAP_PROP_FRAME_HEIGHT, Yres)
 
 # Let the camera warmup
 sleep(0.5)
-quadOld = 0
+angleOld = 0
 	
 # Continuously get an image from the camera stream
 while(True):
@@ -70,9 +69,19 @@ while(True):
         else:
                 # Save the image to the disk
                 if(True):
+
                         # Make the image greyscale for ArUco detection
                         grey = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-                        cv2.imshow("overlay",grey)                      
+                        cv2.imshow("overlay",grey)
+
+                        #UNDISTORT
+                        h, w = grey.shape[:2]
+                        newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w, h))
+
+                        dst = cv2.undistort(grey, mtx, dist, None, newcameramtx)
+
+                        x,y,w,h = roi
+                        dst = dst[y:y+h, x:x+w]
                         
                         # Detecting ArUco Marker
                         corners,ids,rejected = aruco.detectMarkers(grey,aruco_dict)
@@ -82,9 +91,10 @@ while(True):
                         overlay = aruco.drawDetectedMarkers(overlay,corners,borderColor = 4)
 
                         # Draw lines
-                        cv2.line(overlay,(0, int(Yres/2)),(int(Xres), int(Yres/2)),(0,255,0),1)
+                        # cv2.line(overlay,(0, int(Yres/2)),(int(Xres), int(Yres/2)),(0,255,0),1)
                         cv2.line(overlay,(int(Xres/2),0),(int(Xres/2), int(Yres)),(0,255,0),1)
 
+                        
                         # If marker found, show marker on frame
                         if not ids is None:
                                 ids = ids.flatten()
@@ -104,28 +114,17 @@ while(True):
                                 Xcenter = (topLeftX+botRightX)/2
                                 Ycenter = (topLeftY+botRightY)/2
 
-                                # Quadrant
-                                if Xcenter > (Xres/2):
-                                    if Ycenter < (Yres/2):
-                                        Quadrant = 1
-                                    else:
-                                        Quadrant = 4
-                                else:
-                                    if Ycenter < (Yres/2):
-                                        Quadrant = 2
-                                    else:
-                                        Quadrant = 3
+                                # Find angle
+                                FOVangle = -30
+                                angleDegree = ((Xcenter-(Xres/2))/(Xres/2))*FOVangle
 
-                                # Left and Right Wheel List
-                                wheelPosition = [[0],[0,0],[0,1],[1,1],[1,0]]
-                                
-                                if Quadrant != quadOld and not lcdlock.locked():
+                                if (angleDegree > angleOld +.1 or angleDegree < angleOld - .1) and not lcdlock.locked():
                                     # Display LCD
                                     myThread = threading.Thread(target=lcdPrint)
                                     myThread.start()
-                                quadOld = Quadrant
+                                angleOld = angleDegree
                                 
-                                
+                                                                
                         cv2.imshow("overlay",overlay)
                         k = cv2.waitKey(1) & 0xFF
                         if k == ord('q'):
