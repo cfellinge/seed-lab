@@ -16,7 +16,7 @@ class Movement
     PositionMath& pos;
 
 public:
-    Movement(MotorControl &motorController, PositionMath &positionMath);
+    Movement(MotorControl &motorController, PositionMath &positionMath, double WHEEL_RADIUS);
 
     // rotates the robot, moves to coordinates (x, y) (meters), and rotates the robot to face phi (radians)
     void moveToCoordinates(double x, double y, double phi);
@@ -27,6 +27,8 @@ public:
     void stop();
 
     void updateMovement(double numMilliseconds);
+
+    void goInCircle(double x, double y, double r);
 
     // move the robot straight forward a set distance (meters)
     void moveForwards(double distance);

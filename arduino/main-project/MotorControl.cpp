@@ -7,7 +7,7 @@
 #include "MotorControl.h"
 
 // wheel radius in meters
-const double WHEEL_RADIUS = 0.0725;
+double WHEEL_RADIUS;
 
 // h bridge control pins
 int _togglePin;
@@ -69,7 +69,7 @@ double _rawRightWriteValue;
 
 
 // default constructor
-MotorControl::MotorControl(int initalMode)
+MotorControl::MotorControl(int initalMode, double WHEEL_RADIUS)
 {
     this->_togglePin = 4;
 
@@ -87,6 +87,8 @@ MotorControl::MotorControl(int initalMode)
 
     _leftIntegralError = 0;
     _rightIntegralError = 0;
+
+    WHEEL_RADIUS = WHEEL_RADIUS;
 
     setMotorMode(initalMode);
 }

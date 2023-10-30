@@ -11,7 +11,7 @@
 class MotorControl
 {
 public:
-    MotorControl(int initialMode);
+    MotorControl(int initialMode, double WHEEL_RADIUS);
 
     void begin();
 

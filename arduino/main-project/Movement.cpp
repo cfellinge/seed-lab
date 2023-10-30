@@ -23,7 +23,7 @@ double phiTarget;
 double va;
 double dv;
 
-double WHEEL_RADIUS = 0.0725;
+double WHEEL_RADIUS;
 
 double leftWriteValue;
 double rightWriteValue;
@@ -57,8 +57,9 @@ double ROBOT_MAX_SPEED = 0.7;
 // max rotational velocity of robot, rad/s
 double ROBOT_MAX_SPIN = 0.8;
 
-Movement::Movement(MotorControl &motorController, PositionMath &positionMath) : mc(motorController), pos(positionMath)
+Movement::Movement(MotorControl &motorController, PositionMath &positionMath, const double wheelRadius) : mc(motorController), pos(positionMath)
 {
+    WHEEL_RADIUS = wheelRadius;
 }
 
 // move robot to coordinates (x, y) in meters
@@ -69,6 +70,14 @@ void Movement::moveToCoordinates(double x, double y, double phi)
     xTarget = x;
     yTarget = y;
     phiTarget = phi;
+}
+
+// move robot in circle around coordinates (x, y) with radius r
+void Movement::goInCircle(double x, double y, double r)
+{
+    mode = GO_TO_COORDINATES;
+    xTarget = x;
+    yTarget = y;
 }
 
 // move robot straight forward a set distance (meters)
