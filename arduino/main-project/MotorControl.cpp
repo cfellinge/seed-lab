@@ -6,6 +6,9 @@
 #include "Arduino.h"
 #include "MotorControl.h"
 
+// wheel radius in meters
+const double WHEEL_RADIUS = 0.0725;
+
 // h bridge control pins
 int _togglePin;
 
@@ -60,6 +63,10 @@ double _rightIntegralError;
 
 double _leftPosError;
 double _rightPosError;
+
+double _rawLeftWriteValue;
+double _rawRightWriteValue;
+
 
 // default constructor
 MotorControl::MotorControl(int initalMode)
@@ -124,132 +131,62 @@ void MotorControl::updateMotorValues(int millisecondInterval)
 
     _leftLastCount = _leftCount;
     _rightLastCount = _rightCount;
+}
 
-    // Serial.println((String)_leftVelocity + "\t" + (String)_rightVelocity);
-
-    // feedback control code goes here
-    // inputs: _leftVelocity, _targetLeftVelocity
-    // output: _leftWriteValue (0 - 255)
-
-    if (_motorMode == 0)
+void MotorControl::setWriteValues(double leftWrite, double rightWrite)
+{
+    // set direction based on +/- voltage inputs
+    if (leftWrite < 0)
     {
-        _leftWriteValue = 0;
-        _rightWriteValue = 0;
+        setDirection(0, 0);
+        leftWrite = -leftWrite;
+    }
+    else
+    {
+        setDirection(0, 1);
     }
 
-    // velocity control
-    else if (_motorMode == 1)
+    if (rightWrite < 0)
     {
-        if (abs(_leftVelocity) < (_targetLeftVelocity - 0.05))
-        {
-            _leftWriteValue += 2;
-        }
-        if (abs(_leftVelocity) > (_targetLeftVelocity + 0.05))
-        {
-            _leftWriteValue -= 2;
-        }
-        if (abs(_rightVelocity) < (_targetRightVelocity - 0.05))
-        {
-            _rightWriteValue += 2;
-        }
-        if (abs(_rightVelocity) > (_targetRightVelocity + 0.05))
-        {
-            _rightWriteValue -= 2;
-        }
+        setDirection(1, 1);
+        rightWrite = -rightWrite;
+    }
+    else
+    {
+        setDirection(1, 0);
     }
 
-    // positional control
-    else if (_motorMode == 2)
+    // check values bounded
+    if (leftWrite > 255)
     {
-        if (_leftPosition > _targetLeftPosition)
-        {
-            setDirection(0, 0);
-        }
-        else
-        {
-            setDirection(0, 1);
-        }
-
-        if (_rightPosition > _targetRightPosition)
-        {
-            setDirection(1, 0);
-        }
-        else
-        {
-            setDirection(1, 1);
-        }
-
-        _leftPosError = abs(_targetLeftPosition - _leftPosition);
-        _leftIntegralError = _leftIntegralError + _leftPosError * (double)millisecondInterval / 1000;
-        double _leftDesiredSpeed = _KP * _leftPosError + _KI * _leftIntegralError;
-        double _leftError = _leftDesiredSpeed - _leftVelocity;
-        _leftWriteValue = _KP * _leftError;
-
-        if (_leftWriteValue > 255)
-        {
-            _leftWriteValue = 255;
-
-            if (_leftError > 255.0 / _KP)
-            {
-                _leftError = 255.0 / _KP;
-            }
-
-            _leftIntegralError = (_leftWriteValue - _KP * _leftError) / _KI;
-        }
-
-        _rightPosError = abs(_targetRightPosition - _rightPosition);
-        _rightIntegralError = _rightIntegralError + _rightPosError * (double)millisecondInterval / 1000;
-        double _rightDesiredSpeed = _KP * _rightPosError + _KI * _rightIntegralError;
-        double _rightError = _rightDesiredSpeed - _rightVelocity;
-        _rightWriteValue = _KP * _rightError;
-
-        if (_rightWriteValue > 255)
-        {
-            _rightWriteValue = 255;
-
-            if (_rightError > 255.0 / _KP)
-            {
-                _rightError = 255.0 / _KP;
-            }
-
-            _rightIntegralError = (_rightWriteValue - _KP * _rightError) / _KI;
-        }
+        leftWrite = 255;
+    }
+    if (leftWrite < 0)
+    {
+        leftWrite = 0;
+    }
+    if (rightWrite > 255)
+    {
+        rightWrite = 255;
+    }
+    if (rightWrite < 0)
+    {
+        rightWrite = 0;
     }
 
-    // Serial.println("Left Goal: " + (String)_targetLeftPosition + ", Actual: " + (String)_leftPosition + ", Write Value: " +  (String)_leftWriteValue + ", Direction: " + (String)digitalRead(PIN7));
+    _leftWriteValue = leftWrite;
+    _rightWriteValue = rightWrite;
 
-    // check that write values are within hard bounds
-    if (_leftWriteValue > 255)
-    {
-        _leftWriteValue = 255;
-    }
-    if (_leftWriteValue < 0)
-    {
-        _leftWriteValue = 0;
-    }
-    if (_rightWriteValue > 255)
-    {
-        _rightWriteValue = 255;
-    }
-    if (_rightWriteValue < 0)
-    {
-        _rightWriteValue = 0;
-    }
-
-    // write to motors
     analogWrite(_leftVoltagePin, _leftWriteValue);
     analogWrite(_rightVoltagePin, _rightWriteValue);
 }
 
 double MotorControl::calculateMetersPerSecond(int countsRotated, int lastCountsRotated, int numMilliSeconds)
 {
-    double numRotations = (double)(countsRotated - lastCountsRotated) / 800.0;
-    double rotationsPerMinute = numRotations * (numMilliSeconds / 1000.0) * 60.0;
-
-    // Serial.println((String)countsRotated + "\t" + (String)lastCountsRotated + "\t" + (String)numRotations + "\t" + (String)rotationsPerMinute + "\t" + (String)(rotationsPerMinute * 0.00764));
-
-    // return rotationsPerMinute;
-    return rotationsPerMinute * 0.00764; // THIS IS M/S USING A WHEEL DIAMETER OF 14.6 CM, CAN BE CHANGED
+    double metersTravelled = (double)(countsRotated - lastCountsRotated) * 0.000561;
+    metersTravelled = metersTravelled * 1.045; // adjustment value
+    double metersPerSecond = metersTravelled / ((double)numMilliSeconds / 1000.0);
+    return metersPerSecond;
 }
 
 // returns motor angle in radians
@@ -294,7 +231,7 @@ int MotorControl::rightPinInterrupt()
     if (_rightEncoderState == HIGH && _rightLastEncoderState == LOW)
     {
         // logic for CW and CCW rotations
-        if (digitalRead(_rightEncoderBPin) == HIGH)
+        if (digitalRead(_rightEncoderBPin) == LOW) // change this from HIGH to LOW to change which way the wheel turns
         {
             _rightCount = counterClockwise(_rightCount);
         }
@@ -420,7 +357,7 @@ void MotorControl::setPositions(double leftPosition, double rightPosition)
 // 2 = position control
 void MotorControl::setMotorMode(int mode)
 {
-    if (!((mode == 0) || (mode == 1) || (mode == 2)))
+    if (!(mode >= 0 && mode <= 4))
     {
         Serial.println("Error: Attempted to set motor mode outside of range");
         return;

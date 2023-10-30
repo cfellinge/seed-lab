@@ -33,6 +33,11 @@ double PositionMath::getPhi()
     return _phi;
 }
 
+double PositionMath::getRho()
+{
+    return _rho;
+}
+
 void PositionMath::resetPosition()
 {
     this->resetPosition(0, 0, 0);
@@ -45,14 +50,18 @@ void PositionMath::resetPosition(double x, double y, double phi)
     _phi = phi;
 }
 
-void PositionMath::updatePosition(double numSeconds, double velocityLeft, double velocityRight)
+void PositionMath::updatePosition(double numMilliseconds, double velocityLeft, double velocityRight)
 {
+    double numSeconds = numMilliseconds / 1000.0;
+
     double newX = this->calculateX(_x, numSeconds, _phi, velocityLeft, velocityRight);
     double newY = this->calculateY(_y, numSeconds, _phi, velocityLeft, velocityRight);
     double newPhi = this->calculatePhi(_phi, numSeconds, _wheelBaseWidth, velocityLeft, velocityRight);
+    
     _x = newX;
     _y = newY;
     _phi = newPhi;
+    _rho = sqrt(pow(_x, 2) + pow(_y, 2));
 }
 
 double PositionMath::calculateX(double xOld, double deltaT, double phiOld, double velocityLeft, double velocityRight)
@@ -68,9 +77,6 @@ double PositionMath::calculateY(double yOld, double deltaT, double phiOld, doubl
 double PositionMath::calculatePhi(double phiOld, double deltaT, double wheelBaseWidth, double velocityLeft, double velocityRight)
 {
     double phiTemp = phiOld + deltaT * (velocityLeft - velocityRight) / wheelBaseWidth;
-    if (phiTemp > 6.283)
-        phiTemp = 0;
-    if (phiTemp < 0)
-        phiTemp = 6.283;
+
     return phiTemp;
 }

@@ -28,9 +28,12 @@ public:
     int rightPinInterrupt();
 
     void updateMotorValues(int millisecondInterval);
+
     double calculateMetersPerSecond(int countsRotated, int lastCountsRotated, int numMilliSeconds);
 
     double calculatePosition(int countsRotated);
+
+    void setWriteValues(double leftWrite, double rightWrite);
 
     // sets direction of motors
     // side: 0 = left, 1 = right
