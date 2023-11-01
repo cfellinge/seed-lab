@@ -72,6 +72,10 @@ void Movement::moveToCoordinates(double x, double y, double phi)
     phiTarget = phi;
 }
 
+double Movement::getXYError() {
+    return
+}
+
 // move robot in circle around coordinates (x, y) with radius r
 void Movement::goInCircle(double x, double y, double r)
 {

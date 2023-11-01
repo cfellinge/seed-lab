@@ -50,12 +50,15 @@ enum DEMO_2_STATE
   RESET_STATE,
   ACQUIRE_SIGNAL,
   SPIN_2_ZERO,
-  STOP_1,
+  WAIT_STOP_1,
+  SET_STOP_1,
   GO_TO_COORDS,
-  STOP_2,
+  SET_STOP_2,
+  WAIT_STOP_2,
   SPIN_90,
   CIRCLE_TIME,
-  STOP_3,
+  SET_STOP_3,
+  WAIT_STOP_3,
   TEST_1_DONE,
   TEST_2_DONE
 };
@@ -63,6 +66,7 @@ enum DEMO_2_STATE
 // demo2 temp variables
 DEMO_2_STATE demo2State;
 const int testMode = 2;
+int waitTimerMs = 0;
 
 // raw Pi radians input
 double pi_angle;
@@ -136,7 +140,7 @@ void loop()
     // 50 Hz
     // FSM
     if (count %2 == 1) {
-      
+      fsmUpdate();
     }
 
     // 4 Hz
@@ -154,12 +158,6 @@ void loop()
       printDebugStatements();
     }
 
-    // rest count every 10 seconds to avoid overflow
-    if (count % 10000 == 1)
-    {
-      count = 0;
-    }
-
     taskLED.offLED();
   }
 }
@@ -171,24 +169,50 @@ void fsmUpdate() {
       break;
 
     case ACQUIRE_SIGNAL:
-      if ()
-
-
+      if (pi_angle != -1000) {
+        demo2State = SPIN_2_ZERO;
+      }
+      else {
+        // turn left quickly
+        movement.rotateLeft(PI/2);
+      }
       break;
 
     case SPIN_2_ZERO:
-
+      if (pi_angle < 0.01) {
+        demo2State = SET_STOP_1;
+      }
+      else {
+        // turn left quickly
+        movement.rotateLeft(PI/2);
+      }
       break;
-    
-    case STOP_1:
+     
+    case SET_STOP_1:
+      waitTimerMs = millisecondsSinceStartup + 2000;
+      movement.stop();
+      demo2State = WAIT_STOP_1;
+      break;
 
-      break;    
+    case WAIT_STOP_1:
+      if (millisecondsSinceStartup >= waitTimerMs) {
+        waitTimerMs = 0;
+        demo2State = GO_TO_COORDS;
+      }
+      break;
     
     case GO_TO_COORDS:
+      if () {
+        waitTimerMs = 0;
+        demo2State = GO_TO_COORDS;
+      }
+      break;
+
+    case SET_STOP_2:
 
       break;
 
-    case STOP_2:
+    case WAIT_STOP_2:
 
       break;
 
@@ -200,7 +224,11 @@ void fsmUpdate() {
 
       break;
 
-    case STOP_3:
+    case SET_STOP_3:
+
+      break;
+
+    case WAIT_STOP_3:
 
       break;
 
