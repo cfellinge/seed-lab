@@ -64,7 +64,10 @@ enum DEMO_2_STATE
 DEMO_2_STATE demo2State;
 const int testMode = 2;
 
-// 
+// raw Pi radians input
+double pi_angle;
+// raw Pi meters input
+double pi_distance;
 
 // timer2 ISR
 ISR(TIMER2_COMPA_vect)
