@@ -9,62 +9,63 @@
 // MotorControl mc(0);
 // PositionMath pos;
 
-double forwardVel;
-double rotationalVel;
+float forwardVel;
+float rotationalVel;
 
-double forwardVelTarget;
-double rotationalVelTarget;
+float forwardVelTarget;
+float rotationalVelTarget;
 
-double xTarget;
-double yTarget;
-double rhoTarget;
-double phiTarget;
+float xTarget;
+float yTarget;
+float rhoTarget;
+float phiTarget;
 
-double va;
-double dv;
+float va;
+float dv;
 
-double WHEEL_RADIUS;
+float WHEEL_RADIUS;
 
-double leftWriteValue;
-double rightWriteValue;
+float leftWriteValue;
+float rightWriteValue;
 
 enum MODE
 {
     GO_TO_COORDINATES,
     ROTATE_TO_ANGLE,
     STAY_STILL,
-    NO_FEEDBACK_CONTROLS
+    NO_FEEDBACK_CONTROLS,
+    CIRCLE_TIME
 };
 
 MODE mode;
 
-double velIntegralError = 0;
-double angularVelIntegralError = 0;
+float velIntegralError = 0;
+float angularVelIntegralError = 0;
 
 // VA - go zoom straight
-double KP_VEL_INNER = 6;
-double KP_VEL_OUTER = 4;
-double KI_VEL_OUTER = 0.12;
+float KP_VEL_INNER = 6;
+float KP_VEL_OUTER = 4;
+float KI_VEL_OUTER = 0.12;
 
 // DV - spin in circle
-double KP_SPIN_INNER = 5;
-double KP_SPIN_OUTER = 5;
-double KI_SPIN_OUTER = 0.2;
+float KP_SPIN_INNER = 5;
+float KP_SPIN_OUTER = 5;
+float KI_SPIN_OUTER = 0.2;
 
 // max speed of robot, m/s
-double ROBOT_MAX_SPEED = 0.7;
+float ROBOT_MAX_SPEED = 0.7;
 
 // max rotational velocity of robot, rad/s
-double ROBOT_MAX_SPIN = 0.8;
+float ROBOT_MAX_SPIN = 0.8;
 
-Movement::Movement(MotorControl &motorController, PositionMath &positionMath, const double wheelRadius) : mc(motorController), pos(positionMath)
+Movement::Movement(MotorControl &motorController, PositionMath &positionMath, float wheelRadius) : mc(motorController), pos(positionMath)
 {
     WHEEL_RADIUS = wheelRadius;
 }
 
 // move robot to coordinates (x, y) in meters
 // phi currently does not do anything
-void Movement::moveToCoordinates(double x, double y, double phi)
+void Movement::moveToCoordinates(float x, float y, float phi)
 {
     mode = GO_TO_COORDINATES;
     xTarget = x;
@@ -72,20 +73,30 @@ void Movement::moveToCoordinates(double x, double y, double phi)
     phiTarget = phi;
 }
 
-double Movement::getXYError() {
-    return
+float Movement::getXYError()
+{
+    float xErr = pos.getX() - xTarget;
+    float yErr = pos.getY() - xTarget;
+    return sqrt(pow(xErr, 2) + pow(yErr, 2));
+}
+
+
+
+float Movement::getPhiError()
+{
+    return pos.getPhi() - phiTarget;
 }
 
 // move robot in circle around coordinates (x, y) with radius r
-void Movement::goInCircle(double x, double y, double r)
+void Movement::goInCircle(float x, float y, float r)
 {
-    mode = GO_TO_COORDINATES;
+    mode = CIRCLE_TIME;
     xTarget = x;
     yTarget = y;
 }
 
 // move robot straight forward a set distance (meters)
-void Movement::moveForwards(double distance)
+void Movement::moveForwards(float distance)
 {
     mode = GO_TO_COORDINATES;
     xTarget = distance * cos(pos.getPhi());
@@ -94,7 +105,7 @@ void Movement::moveForwards(double distance)
 }
 
 // rotate robot to face a set angle (radians)
-void Movement::rotateLeft(double angle)
+void Movement::rotateLeft(float angle)
 {
     mode = ROTATE_TO_ANGLE;
     phiTarget = angle;
@@ -104,26 +115,26 @@ void Movement::rotateLeft(double angle)
 }
 
 // doesn't work
-void Movement::moveAtSpeed(double leftSpeed, double rightSpeed)
+void Movement::moveAtSpeed(float leftSpeed, float rightSpeed)
 {
-    mode = NO_FEEDBACK_CONTROLS;
-    forwardVelTarget = leftSpeed;
+
 }
 
-void Movement::stop() {
+void Movement::stop()
+{
     mode = STAY_STILL;
 }
 
-void Movement::updateMovement(double numMilliseconds)
+void Movement::updateMovement(float numMilliseconds)
 {
-    double leftVel = mc.getLeftVelocity();
-    double rightVel = mc.getRightVelocity();
+    float leftVel = mc.getLeftVelocity();
+    float rightVel = mc.getRightVelocity();
 
     forwardVel = WHEEL_RADIUS * (leftVel + rightVel) / 2;
     rotationalVel = WHEEL_RADIUS * (leftVel - rightVel) / 2;
 
-    double rhoActual = pos.getRho();
-    double phiActual = pos.getPhi();
+    float rhoActual = pos.getRho();
+    float phiActual = pos.getPhi();
 
     switch (mode)
     {
@@ -153,6 +164,10 @@ void Movement::updateMovement(double numMilliseconds)
         dv = angularVelOuterIntegralControl(phiActual, phiActual, rotationalVel, numMilliseconds);
         break;
 
+    case CIRCLE_TIME:
+        va = velInnerProportionalControl(forwardVel, 0.5);
+        dv = angularVelInnerProportionalControl(rotationalVel, 0.5);
+
     case NO_FEEDBACK_CONTROLS:
         break;
     }
@@ -163,14 +178,14 @@ void Movement::updateMovement(double numMilliseconds)
 }
 
 
-double Movement::velOuterIntegralControl(double rho, double rho_desired, double vel, int millisecondInterval)
+float Movement::velOuterIntegralControl(float rho, float rho_desired, float vel, int millisecondInterval)
 {
     // PI block
-    double velPosError = rho_desired - rho;
-    velIntegralError = velIntegralError + velPosError * (double)millisecondInterval / 1000.0;
-    double desiredSpeed = KP_VEL_OUTER * velPosError + KI_VEL_OUTER * velIntegralError;
-    double velError = desiredSpeed - vel;
-    double vel_desired = KP_VEL_OUTER * velError;
+    float velPosError = rho_desired - rho;
+    velIntegralError = velIntegralError + velPosError * (float)millisecondInterval / 1000.0;
+    float desiredSpeed = KP_VEL_OUTER * velPosError + KI_VEL_OUTER * velIntegralError;
+    float velError = desiredSpeed - vel;
+    float vel_desired = KP_VEL_OUTER * velError;
 
     // integral windup block
     if (vel_desired > ROBOT_MAX_SPEED)
@@ -198,18 +213,18 @@ double Movement::velOuterIntegralControl(double rho, double rho_desired, double 
     }
 
     // inner feedback loop
-    double va = velInnerProportionalControl(vel, vel_desired);
+    float va = velInnerProportionalControl(vel, vel_desired);
 
     // voltage to apply to both motors
     return va;
 }
 
-double Movement::velInnerProportionalControl(double vel_actual, double vel_desired)
+float Movement::velInnerProportionalControl(float vel_actual, float vel_desired)
 {
     // P block
-    double error = vel_desired - vel_actual;
-    double kError = error * KP_VEL_INNER;
-    double kErrorBounded = kError;
+    float error = vel_desired - vel_actual;
+    float kError = error * KP_VEL_INNER;
+    float kErrorBounded = kError;
 
     // bounding block
     if (kErrorBounded > 8)
@@ -221,23 +236,23 @@ double Movement::velInnerProportionalControl(double vel_actual, double vel_desir
         kErrorBounded = -8;
     }
 
-    double va = kErrorBounded;
+    float va = kErrorBounded;
 
     return va;
 }
 
-double Movement::angularVelOuterIntegralControl(double phi, double phi_desired, double angularVel, int millisecondInterval)
+float Movement::angularVelOuterIntegralControl(float phi, float phi_desired, float angularVel, int millisecondInterval)
 {
     // PI block
-    double angularVelPosError = phi_desired - phi; // radians
+    float angularVelPosError = phi_desired - phi; // radians
 
-    angularVelIntegralError = angularVelIntegralError + angularVelPosError * (double)millisecondInterval / 1000.0; // radians * seconds
+    angularVelIntegralError = angularVelIntegralError + angularVelPosError * (float)millisecondInterval / 1000.0; // radians * seconds
 
-    double desiredSpeed = KP_SPIN_OUTER * angularVelPosError + KI_SPIN_OUTER * angularVelIntegralError;
+    float desiredSpeed = KP_SPIN_OUTER * angularVelPosError + KI_SPIN_OUTER * angularVelIntegralError;
 
-    double angularVelError = desiredSpeed - angularVel;
+    float angularVelError = desiredSpeed - angularVel;
 
-    double angularVel_desired = KP_SPIN_OUTER * angularVelError;
+    float angularVel_desired = KP_SPIN_OUTER * angularVelError;
 
     // integral windup block
     if (angularVel_desired > ROBOT_MAX_SPIN)
@@ -265,18 +280,18 @@ double Movement::angularVelOuterIntegralControl(double phi, double phi_desired, 
     }
 
     // inner feedback loop
-    double dv = angularVelInnerProportionalControl(angularVel, angularVel_desired);
+    float dv = angularVelInnerProportionalControl(angularVel, angularVel_desired);
 
     // voltage to apply to both motors
     return dv;
 }
 
-double Movement::angularVelInnerProportionalControl(double angularVel_actual, double angularVel_desired)
+float Movement::angularVelInnerProportionalControl(float angularVel_actual, float angularVel_desired)
 {
     // P block
-    double error = angularVel_desired - angularVel_actual; // rad/s
-    double kError = error * KP_SPIN_INNER;                 // volts
-    double kErrorBounded = kError;                         // volts
+    float error = angularVel_desired - angularVel_actual; // rad/s
+    float kError = error * KP_SPIN_INNER;                 // volts
+    float kErrorBounded = kError;                         // volts
 
     // bounding block
     if (kErrorBounded > 8)
@@ -288,13 +303,13 @@ double Movement::angularVelInnerProportionalControl(double angularVel_actual, do
         kErrorBounded = -8;
     }
 
-    double dv = kErrorBounded;
+    float dv = kErrorBounded;
 
     return dv;
 }
 
 // takes in Va and deltaV, both in volts
-void Movement::driveMotor(double va, double dv)
+void Movement::driveMotor(float va, float dv)
 {
     // convert volts to write values
     va = va * 255.0 / 8.0;
@@ -306,43 +321,43 @@ void Movement::driveMotor(double va, double dv)
     mc.setWriteValues(leftWriteValue, rightWriteValue);
 }
 
-double Movement::getForwardVel()
+float Movement::getForwardVel()
 {
     return forwardVel;
 }
 
-double Movement::getRotationalVel()
+float Movement::getRotationalVel()
 {
     return rotationalVel;
 }
 
-double Movement::getDV()
+float Movement::getDV()
 {
     return dv;
 }
 
-double Movement::getVA()
+float Movement::getVA()
 {
     return va;
 }
 
-double Movement::getRhoTarget()
+float Movement::getRhoTarget()
 {
     return rhoTarget;
 }
 
-double Movement::getXTarget()
+float Movement::getXTarget()
 {
     return xTarget;
 }
 
-double Movement::getYTarget()
+float Movement::getYTarget()
 {
     return yTarget;
 }
 
 
-double Movement::getPhiTarget()
+float Movement::getPhiTarget()
 {
     return phiTarget;
 }

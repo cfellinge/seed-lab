@@ -10,22 +10,22 @@
 
 class PositionMath {
     public:
-        PositionMath(double wheelBaseWidth);
-        double getX();
-        double getY();
-        double getPhi();
-        double getRho();
+        PositionMath(float wheelBaseWidth);
+        float getX();
+        float getY();
+        float getPhi();
+        float getRho();
         void resetPosition();
-        void resetPosition(double x, double y, double phi);
-        void updatePosition(double numMilliseconds, double velocityLeft, double velocityRight);
+        void resetPosition(float x, float y, float phi);
+        void updatePosition(float numMilliseconds, float velocityLeft, float velocityRight);
     private:
-        double calculateX(double xOld, double deltaT, double phiOld, double velocityLeft, double velocityRight);
-        double calculateY(double yOld, double deltaT, double phiOld, double velocityLeft, double velocityRight);
-        double calculatePhi(double phiOld, double deltaT, double wheelBaseWidth, double velocityLeft, double velocityRight);
-        double _x;
-        double _y;
-        double _phi;
-        double _rho;
+        float calculateX(float xOld, float deltaT, float phiOld, float velocityLeft, float velocityRight);
+        float calculateY(float yOld, float deltaT, float phiOld, float velocityLeft, float velocityRight);
+        float calculatePhi(float phiOld, float deltaT, float wheelBaseWidth, float velocityLeft, float velocityRight);
+        float _x;
+        float _y;
+        float _phi;
+        float _rho;
 };
 
 #endif

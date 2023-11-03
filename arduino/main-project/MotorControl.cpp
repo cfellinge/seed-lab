@@ -7,7 +7,7 @@
 #include "MotorControl.h"
 
 // wheel radius in meters
-double WHEEL_RADIUS;
+float WHEEL_RADIUS;
 
 // h bridge control pins
 int _togglePin;
@@ -37,17 +37,17 @@ int _rightEncoderState;
 int _leftLastEncoderState;
 int _rightLastEncoderState;
 
-double _leftVelocity;
-double _rightVelocity;
+float _leftVelocity;
+float _rightVelocity;
 
-double _targetLeftVelocity;
-double _targetRightVelocity;
+float _targetLeftVelocity;
+float _targetRightVelocity;
 
-double _leftPosition;
-double _rightPosition;
+float _leftPosition;
+float _rightPosition;
 
-double _targetLeftPosition;
-double _targetRightPosition;
+float _targetLeftPosition;
+float _targetRightPosition;
 
 int _motorMode;
 
@@ -55,21 +55,21 @@ int _leftWriteValue;
 int _rightWriteValue;
 
 // PID Tuning Variables
-const double _KP = 9;
-const double _KI = 0.15;
+const float _KP = 9;
+const float _KI = 0.15;
 
-double _leftIntegralError;
-double _rightIntegralError;
+float _leftIntegralError;
+float _rightIntegralError;
 
-double _leftPosError;
-double _rightPosError;
+float _leftPosError;
+float _rightPosError;
 
-double _rawLeftWriteValue;
-double _rawRightWriteValue;
+float _rawLeftWriteValue;
+float _rawRightWriteValue;
 
 
 // default constructor
-MotorControl::MotorControl(int initalMode, double WHEEL_RADIUS)
+MotorControl::MotorControl(int initalMode, float WHEEL_RADIUS)
 {
     this->_togglePin = 4;
 
@@ -135,7 +135,7 @@ void MotorControl::updateMotorValues(int millisecondInterval)
     _rightLastCount = _rightCount;
 }
 
-void MotorControl::setWriteValues(double leftWrite, double rightWrite)
+void MotorControl::setWriteValues(float leftWrite, float rightWrite)
 {
     // set direction based on +/- voltage inputs
     if (leftWrite < 0)
@@ -183,21 +183,21 @@ void MotorControl::setWriteValues(double leftWrite, double rightWrite)
     analogWrite(_rightVoltagePin, _rightWriteValue);
 }
 
-double MotorControl::calculateMetersPerSecond(int countsRotated, int lastCountsRotated, int numMilliSeconds)
+float MotorControl::calculateMetersPerSecond(int countsRotated, int lastCountsRotated, int numMilliSeconds)
 {
-    double metersTravelled = (double)(countsRotated - lastCountsRotated) * 0.000561;
+    float metersTravelled = (float)(countsRotated - lastCountsRotated) * 0.000561;
     metersTravelled = metersTravelled * 1.045; // adjustment value
-    double metersPerSecond = metersTravelled / ((double)numMilliSeconds / 1000.0);
+    float metersPerSecond = metersTravelled / ((float)numMilliSeconds / 1000.0);
     return metersPerSecond;
 }
 
 // returns motor angle in radians
 // assumes motor starts at 0 radians
-double MotorControl::calculatePosition(int countsRotated)
+float MotorControl::calculatePosition(int countsRotated)
 {
-    double numRotations = (double)(countsRotated) / 800.0;
+    float numRotations = (float)(countsRotated) / 800.0;
 
-    double numRadians = numRotations * (2 * PI);
+    float numRadians = numRotations * (2 * PI);
 
     numRadians = mod2Pi(numRadians);
 
@@ -276,12 +276,12 @@ void MotorControl::setDirection(int side, int direction)
     }
 }
 
-double MotorControl::getLeftVelocity()
+float MotorControl::getLeftVelocity()
 {
     return _leftVelocity;
 }
 
-double MotorControl::getRightVelocity()
+float MotorControl::getRightVelocity()
 {
     return _rightVelocity;
 }
@@ -306,27 +306,27 @@ int MotorControl::getRightEncoderPin()
     return _rightEncoderAPin;
 }
 
-double MotorControl::getLeftPosition()
+float MotorControl::getLeftPosition()
 {
     return _leftPosition;
 }
 
-double MotorControl::getRightPosition()
+float MotorControl::getRightPosition()
 {
     return _rightPosition;
 }
 
-double MotorControl::getLeftWriteValue()
+float MotorControl::getLeftWriteValue()
 {
     return _leftWriteValue;
 }
 
-double MotorControl::getRightWriteValue()
+float MotorControl::getRightWriteValue()
 {
     return _rightWriteValue;
 }
 
-double MotorControl::mod2Pi(double input)
+float MotorControl::mod2Pi(float input)
 {
     //     while (input > 2 * PI)
     //     {
@@ -339,13 +339,13 @@ double MotorControl::mod2Pi(double input)
     return input;
 }
 
-void MotorControl::setVelocities(double targetLeftVelocity, double targetRightVelocity)
+void MotorControl::setVelocities(float targetLeftVelocity, float targetRightVelocity)
 {
     _targetLeftVelocity = targetLeftVelocity;
     _targetRightVelocity = targetRightVelocity;
 }
 
-void MotorControl::setPositions(double leftPosition, double rightPosition)
+void MotorControl::setPositions(float leftPosition, float rightPosition)
 {
     // leftPosition = mod2Pi(leftPosition);
     // rightPosition = mod2Pi(rightPosition);

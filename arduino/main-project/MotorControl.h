@@ -11,16 +11,16 @@
 class MotorControl
 {
 public:
-    MotorControl(int initialMode, double WHEEL_RADIUS);
+    MotorControl(int initialMode, float WHEEL_RADIUS);
 
     void begin();
 
     // set velocity of each motor, in m/s
-    void setVelocities(double targetLeftVelocity, double targetRightVelocity);
+    void setVelocities(float targetLeftVelocity, float targetRightVelocity);
 
     // set position of each motor, in radians
     // assumes start position is 0 radians
-    void setPositions(double leftPosition, double rightPosition);
+    void setPositions(float leftPosition, float rightPosition);
 
     void setMotorMode(int mode);
 
@@ -29,19 +29,19 @@ public:
 
     void updateMotorValues(int millisecondInterval);
 
-    double calculateMetersPerSecond(int countsRotated, int lastCountsRotated, int numMilliSeconds);
+    float calculateMetersPerSecond(int countsRotated, int lastCountsRotated, int numMilliSeconds);
 
-    double calculatePosition(int countsRotated);
+    float calculatePosition(int countsRotated);
 
-    void setWriteValues(double leftWrite, double rightWrite);
+    void setWriteValues(float leftWrite, float rightWrite);
 
     // sets direction of motors
     // side: 0 = left, 1 = right
     // direction: 0 = forwards, 1 = backwards
     void setDirection(int side, int direction);
     
-    double getLeftVelocity();
-    double getRightVelocity();
+    float getLeftVelocity();
+    float getRightVelocity();
 
     int getLeftCount();
     int getRightCount();
@@ -49,15 +49,15 @@ public:
     int getLeftEncoderPin();
     int getRightEncoderPin();
 
-    double getLeftPosition();
-    double getRightPosition();
+    float getLeftPosition();
+    float getRightPosition();
 
-    double getLeftWriteValue();
-    double getRightWriteValue();
+    float getLeftWriteValue();
+    float getRightWriteValue();
 
-    double mod2Pi(double input);
+    float mod2Pi(float input);
 
-    // void setWheelPosition(double targetLeftWheelPosition, double targetRightWheelPosition);
+    // void setWheelPosition(float targetLeftWheelPosition, float targetRightWheelPosition);
     // void updateWheelPositionValues(int millisecondInterval);
     
 private:

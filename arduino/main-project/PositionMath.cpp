@@ -6,34 +6,34 @@
 #include "Arduino.h"
 #include "PositionMath.h"
 
-double _x;
-double _y;
-double _phi;
+float _x;
+float _y;
+float _phi;
 
 // wheelbase width in meters
-double _wheelBaseWidth;
+float _wheelBaseWidth;
 
-PositionMath::PositionMath(double wheelBaseWidth)
+PositionMath::PositionMath(float wheelBaseWidth)
 {
     _wheelBaseWidth = wheelBaseWidth;
 }
 
-double PositionMath::getX()
+float PositionMath::getX()
 {
     return _x;
 }
 
-double PositionMath::getY()
+float PositionMath::getY()
 {
     return _y;
 }
 
-double PositionMath::getPhi()
+float PositionMath::getPhi()
 {
     return _phi;
 }
 
-double PositionMath::getRho()
+float PositionMath::getRho()
 {
     return _rho;
 }
@@ -43,20 +43,20 @@ void PositionMath::resetPosition()
     this->resetPosition(0, 0, 0);
 }
 
-void PositionMath::resetPosition(double x, double y, double phi)
+void PositionMath::resetPosition(float x, float y, float phi)
 {
     _x = x;
     _y = y;
     _phi = phi;
 }
 
-void PositionMath::updatePosition(double numMilliseconds, double velocityLeft, double velocityRight)
+void PositionMath::updatePosition(float numMilliseconds, float velocityLeft, float velocityRight)
 {
-    double numSeconds = numMilliseconds / 1000.0;
+    float numSeconds = numMilliseconds / 1000.0;
 
-    double newX = this->calculateX(_x, numSeconds, _phi, velocityLeft, velocityRight);
-    double newY = this->calculateY(_y, numSeconds, _phi, velocityLeft, velocityRight);
-    double newPhi = this->calculatePhi(_phi, numSeconds, _wheelBaseWidth, velocityLeft, velocityRight);
+    float newX = this->calculateX(_x, numSeconds, _phi, velocityLeft, velocityRight);
+    float newY = this->calculateY(_y, numSeconds, _phi, velocityLeft, velocityRight);
+    float newPhi = this->calculatePhi(_phi, numSeconds, _wheelBaseWidth, velocityLeft, velocityRight);
     
     _x = newX;
     _y = newY;
@@ -64,19 +64,19 @@ void PositionMath::updatePosition(double numMilliseconds, double velocityLeft, d
     _rho = sqrt(pow(_x, 2) + pow(_y, 2));
 }
 
-double PositionMath::calculateX(double xOld, double deltaT, double phiOld, double velocityLeft, double velocityRight)
+float PositionMath::calculateX(float xOld, float deltaT, float phiOld, float velocityLeft, float velocityRight)
 {
     return xOld + deltaT * cos(phiOld) * (velocityLeft + velocityRight) / 2;
 }
 
-double PositionMath::calculateY(double yOld, double deltaT, double phiOld, double velocityLeft, double velocityRight)
+float PositionMath::calculateY(float yOld, float deltaT, float phiOld, float velocityLeft, float velocityRight)
 {
     return yOld + deltaT * sin(phiOld) * (velocityLeft + velocityRight) / 2;
 }
 
-double PositionMath::calculatePhi(double phiOld, double deltaT, double wheelBaseWidth, double velocityLeft, double velocityRight)
+float PositionMath::calculatePhi(float phiOld, float deltaT, float wheelBaseWidth, float velocityLeft, float velocityRight)
 {
-    double phiTemp = phiOld + deltaT * (velocityLeft - velocityRight) / wheelBaseWidth;
+    float phiTemp = phiOld + deltaT * (velocityLeft - velocityRight) / wheelBaseWidth;
 
     return phiTemp;
 }
