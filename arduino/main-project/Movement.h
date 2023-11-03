@@ -48,6 +48,8 @@ public:
     float angularVelOuterIntegralControl(float phi, float phi_desired, float angularVel, int millisecondInterval);
     float angularVelInnerProportionalControl(float angularVel_actual, float angularVel_desired);
 
+    double getXYError();
+
     // rotate the robot a set angle (radians)
     void rotateLeft(float angle);
 
