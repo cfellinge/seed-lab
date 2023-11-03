@@ -38,17 +38,12 @@ public:
     // move the robot straight forward a set distance (meters)
     void moveForwards(float distance);
 
-    // set each wheel to a certain number of radians
-    void setRotations(float leftPosition, float rightPosition);
-
     // feedback control loops:
     float velOuterIntegralControl(float rho, float rho_desired, float vel_actual, int millisecondInterval);
     float velInnerProportionalControl(float vel_actual, float vel_desired);
 
     float angularVelOuterIntegralControl(float phi, float phi_desired, float angularVel, int millisecondInterval);
     float angularVelInnerProportionalControl(float angularVel_actual, float angularVel_desired);
-
-    double getXYError();
 
     // rotate the robot a set angle (radians)
     void rotateLeft(float angle);

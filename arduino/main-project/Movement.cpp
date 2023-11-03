@@ -112,6 +112,7 @@ void Movement::rotateLeft(float angle)
     xTarget = pos.getX();
     yTarget = pos.getY();
 
+    
     Serial.println("PHI TARGET IS " + (String)phiTarget);
 }
 
@@ -177,7 +178,6 @@ void Movement::updateMovement(float numMilliseconds)
     // Serial.println("VA: " + (String)va + " DV: " + (String)dv);
     driveMotor(va, dv);
 }
-
 
 float Movement::velOuterIntegralControl(float rho, float rho_desired, float vel, int millisecondInterval)
 {
