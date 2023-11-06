@@ -62,6 +62,8 @@ public:
 
     float getXTarget();
 
+    float calculatePhiError(float phi, float phiDes);
+
     float getYTarget();
 
     float getPhiTarget();

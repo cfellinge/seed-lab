@@ -59,19 +59,81 @@ enum DEMO_2_STATE
   SPIN_90,
   START_CIRCLE_TIME,
   CIRCLE_TIME,
+  CIRCLE_FUDGE,
   TEST_1_DONE,
   TEST_2_DONE
 };
 
+String stateToString(DEMO_2_STATE state)
+{
+  switch (state)
+  {
+  case RESET_STATE:
+    return "RESET STATE";
+    break;
+  case ACQUIRE_SIGNAL:
+    return "ACQUIRE SIGNAL";
+    break;
+  case SPIN_2_ZERO:
+    return "SPIN TO ZERO";
+    break;
+  case WAIT_STOP_1:
+    return "WAIT STOP 1";
+    break;
+  case SET_STOP_1:
+    return "SET STOP 1";
+    break;
+  case GO_TO_COORDS:
+    return "GO TO COORDS";
+    break;
+  case SET_STOP_2:
+    return "SET STOP 2";
+    break;
+  case WAIT_STOP_2:
+    return "WAIT STOP 2";
+    break;
+  case START_SPIN_90:
+    return "START SPIN 90";
+    break;
+  case SPIN_90:
+    return "SPIN 90";
+    break;
+  case START_CIRCLE_TIME:
+    return "START CIRCLE TIME";
+    break;
+  case CIRCLE_TIME:
+    return "CIRCLE TIME";
+    break;
+  case CIRCLE_FUDGE:
+    return "CIRCLE FUDGE";
+    break;
+  case TEST_1_DONE:
+    return "TEST 1 DONE";
+    break;
+  case TEST_2_DONE:
+    return "TEST 2 DONE";
+    break;
+  default:
+    return "";
+    break;
+  }
+
+  return "";
+}
+
 // demo2 temp variables
-DEMO_2_STATE demo2State;
+DEMO_2_STATE demo2State = RESET_STATE;
 const int testMode = 2;
-int waitTimerMs = 0;
+long waitTimerMs = 0;
 
 // raw Pi radians input
-float pi_angle;
+float pi_angle = -1000;
 // raw Pi meters input
-float pi_distance;
+float pi_distance = -1000;
+
+float xTargetFSM;
+float yTargetFSM;
+float phiTargetFSM;
 
 // timer2 ISR
 ISR(TIMER2_COMPA_vect)
@@ -132,6 +194,10 @@ void loop()
     // update all objects
     if (count % 2 == 0)
     {
+      // get angle and distance from pi
+      pi_distance = piCommunication.getDistance();
+      pi_angle = piCommunication.getAngle();
+
       motorController.updateMotorValues(20);
       movement.updateMovement(20);
       position.updatePosition(20, motorController.getLeftVelocity(), motorController.getRightVelocity());
@@ -158,16 +224,14 @@ void loop()
     {
       printDebugStatements();
     }
-
     taskLED.offLED();
   }
 }
 
 void fsmUpdate()
 {
-  float xTarget;
-  float yTarget;
-  float phiTarget;
+  DEMO_2_STATE lastState = demo2State;
+
   switch (demo2State)
   {
   case RESET_STATE:
@@ -175,26 +239,26 @@ void fsmUpdate()
     break;
 
   case ACQUIRE_SIGNAL:
-    if (pi_angle != -1000)
+    if (pi_angle != NAN)
     {
       demo2State = SPIN_2_ZERO;
     }
     else
     {
       // turn left quickly
-      movement.rotateLeft(PI / 2);
+      movement.rotateLeft(position.getPhi() + PI / 2);
     }
     break;
 
   case SPIN_2_ZERO:
-    if (pi_angle < 0.01)
+    if (abs(pi_angle) < 0.01)
     {
       demo2State = SET_STOP_1;
     }
     else
     {
       // turn left quickly
-      movement.rotateLeft(PI / 2);
+      movement.rotateLeft(position.getPhi() + pi_angle);
     }
     break;
 
@@ -213,14 +277,14 @@ void fsmUpdate()
     break;
 
   case GO_TO_COORDS:
-    if (movement.getXYError() < 0.01)
+    if (pi_distance < 0.01)
     {
       demo2State = SET_STOP_2;
     }
     // go to (x, y) given by pi
-    xTarget = position.getX() + pi_distance * cos(pi_angle);
-    yTarget = position.getY() + pi_distance * sin(pi_angle);
-    movement.moveToCoordinates(xTarget, yTarget, 0);
+    xTargetFSM = position.getX() + pi_distance * cos(position.getPhi() + pi_angle);
+    yTargetFSM = position.getY() + pi_distance * sin(position.getPhi() + pi_angle);
+    movement.moveToCoordinates(xTargetFSM, yTargetFSM, 0);
     break;
 
   case SET_STOP_2:
@@ -233,51 +297,66 @@ void fsmUpdate()
     if (millisecondsSinceStartup >= waitTimerMs)
     {
       waitTimerMs = 0;
-      if (testMode == 1) {
+      if (testMode == 1)
+      {
         demo2State = TEST_1_DONE;
       }
-      if (testMode == 2) {
-        demo2State = SPIN_90;
+      if (testMode == 2)
+      {
+        demo2State = START_SPIN_90;
       }
     }
     break;
 
   case START_SPIN_90:
-    xTarget = position.getX() + cos(position.getPhi());
-    yTarget = position.getY() + sin(position.getPhi());
-    phiTarget = position.getPhi() - PI / 2;
-    movement.rotateLeft(phiTarget);
+    phiTargetFSM = position.getPhi() - PI / 2;
+    movement.rotateLeft(phiTargetFSM);
+    demo2State = SPIN_90;
     break;
 
   case SPIN_90:
-    if (movement.getPhiError() < 0.01)
+    if (abs(movement.getPhiError()) < 0.01)
     {
-      demo2State = CIRCLE_TIME;
+      demo2State = START_CIRCLE_TIME;
     }
     break;
 
   case START_CIRCLE_TIME:
-    movement.goInCircle(xTarget, yTarget, 0.5);
-    xTarget = position.getX();
-    yTarget = position.getY();
+    movement.goInCircle(xTargetFSM, yTargetFSM, 0);
+    xTargetFSM = position.getX();
+    yTargetFSM = position.getY();
+    phiTargetFSM = position.getPhi();
     waitTimerMs = millisecondsSinceStartup + 2000;
     demo2State = CIRCLE_TIME;
     break;
 
   case CIRCLE_TIME:
-    if (millisecondsSinceStartup >= waitTimerMs && movement.getXYError() < 0.05)
+    if ((millisecondsSinceStartup >= waitTimerMs) && (abs(movement.calculatePhiError(position.getPhi(), phiTargetFSM)) <= 0.2))
     {
+      Serial.println("Phi goal: " + (String)phiTargetFSM + ", Actual phi: " + (String)position.getPhi());
       movement.stop();
       waitTimerMs = 0;
-      demo2State = TEST_2_DONE;
+      movement.moveToCoordinates(xTargetFSM, yTargetFSM, 0);
+      demo2State = CIRCLE_FUDGE;
     }
     break;
 
+  case CIRCLE_FUDGE:
+    if (abs(movement.getXYError()) < 0.01)
+    {
+      Serial.println("Movement XY Error: " + (String)movement.getXYError());
+      demo2State = TEST_2_DONE;
+    }
+    // go to (x, y) given by pi
+    break;
+
   case TEST_1_DONE:
+    movement.stop();
     taskLED.onLED();
     break;
 
   case TEST_2_DONE:
+    movement.stop();
     taskLED.onLED();
     break;
 
@@ -285,6 +364,11 @@ void fsmUpdate()
     Serial.println("ERROR: Default FSM State reached. Exiting.");
     exit(-1);
     break;
+  }
+
+  if (lastState != demo2State)
+  {
+    Serial.println("CHANGED STATE. Old state: " + stateToString(lastState) + ", New state: " + stateToString(demo2State));
   }
 }
 
@@ -306,7 +390,10 @@ void printDebugStatements()
   // Serial.println("Left Voltage: " + (String)((float)motorController.getLeftWriteValue() / 255.0 * 8.0) + ", Right Voltage: " + (String)((float)motorController.getRightWriteValue() / 255.0 * 8.0));
 
   // X, Y, PHI
-  // Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", rho: " + (String)(position.getRho()) + ", phi: " + (String)(position.getPhi() / PI) + " pi");
+  Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", rho: " + (String)(position.getRho()) + ", phi: " + (String)(position.getPhi() / PI) + " pi");
+
+  // FSM Targets
+  Serial.println("FSM - X Target: " + (String)xTargetFSM + ", Y target: " + (String)yTargetFSM + ", Phi target: " + (String)phiTargetFSM);
 
   // WHEEL POSITIONS
   // Serial.println("Left pos: " + (String)(motorController.getLeftPosition() / PI) + " pi, Right pos: " + (String)(motorController.getRightPosition() / PI) + " pi");
@@ -315,13 +402,21 @@ void printDebugStatements()
   // Serial.println("VA: " + (String)movement.getVA() + ", DV: " + (String)movement.getDV());
 
   // RHO, PHI TARGETS
-  // Serial.println("Rho goal: " + (String)movement.getRhoTarget() + ", Phi goal: " + (String)(movement.getPhiTarget() / PI) + " pi");
+  // Serial.println("MVT - Rho goal: " + (String)movement.getRhoTarget() + ", Phi goal: " + (String)(movement.getPhiTarget() / PI) + " pi");
 
   // X, Y TARGETS
-  // Serial.println("X goal: " + (String)movement.getXTarget() + ", Y goal: " + (String)(movement.getYTarget()));
+  // Serial.println("MVT - X Target: " + (String)movement.getXTarget() + ", Y target: " + (String)(movement.getYTarget()));
 
   // FORWARD, ROTATIONAL VELOCITY
   // Serial.println("Forwards velocity: " + (String)movement.getForwardVel() + ", Rotational velocity: " + (String)movement.getRotationalVel());
+
+  // RASPBERRY PI VALUES
+  Serial.println("Pi distance: " + (String)pi_distance + " meters, Pi angle: " + (String)(pi_angle / PI) + " pi");
+
+  // STATE
+  Serial.println("State: " + stateToString(demo2State));
+
+  Serial.println();
 }
 
 void leftPinInterrupt()

@@ -6,9 +6,6 @@
 #include "Arduino.h"
 #include "MotorControl.h"
 
-// wheel radius in meters
-float WHEEL_RADIUS;
-
 // h bridge control pins
 int _togglePin;
 
@@ -69,7 +66,7 @@ float _rawRightWriteValue;
 
 
 // default constructor
-MotorControl::MotorControl(int initalMode, float WHEEL_RADIUS)
+MotorControl::MotorControl(int initalMode)
 {
     this->_togglePin = 4;
 
@@ -87,8 +84,6 @@ MotorControl::MotorControl(int initalMode, float WHEEL_RADIUS)
 
     _leftIntegralError = 0;
     _rightIntegralError = 0;
-
-    WHEEL_RADIUS = WHEEL_RADIUS;
 
     setMotorMode(initalMode);
 }

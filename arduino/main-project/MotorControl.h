@@ -11,7 +11,7 @@
 class MotorControl
 {
 public:
-    MotorControl(int initialMode, float WHEEL_RADIUS);
+    MotorControl(int initialMode);
 
     void begin();
 

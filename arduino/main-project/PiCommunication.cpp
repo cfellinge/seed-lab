@@ -7,14 +7,16 @@ int pin;
 
 #include "Arduino.h"
 #include "PiCommunication.h"
-
 #include <Wire.h>
 
 // Global Varialbes for I2C communication, taken from Exercise 1B
 volatile uint8_t offset = 0;
-volatile uint8_t instruction[32] = {0};
+volatile uint8_t instruction[12] = {0};
+volatile uint8_t angle[6] = {0};
+volatile uint8_t dist[6] = {0};
 volatile uint8_t msgLength = 0;
-volatile uint8_t reply = 0;
+volatile float finalAngle = NAN;
+volatile float finalDist = NAN;
 
 int MY_ADDR = 8;
 
@@ -30,31 +32,52 @@ void PiCommunication::begin()
 }
 
 // printReceived helps us see what data we are getting from the leader
+// interrupt
 void PiCommunication::printReceived()
 {
-  // Print on serial console
   Serial.print("Offset received: ");
   Serial.println(offset);
   Serial.print("Message Length: ");
   Serial.println(msgLength);
-  Serial.print("Instruction received: ");
-  for (int i = 0; i < msgLength; i++)
+  Serial.print("Angle received: ");
+  for (int i = 0; i < 6; i++)
   {
-    Serial.print(String(instruction[i]) + "\t");
+    angle[i] = uint8_t(instruction[i]) - 48;
+    Serial.print(angle[i]);
   }
-  Serial.println("");
+  if (angle[0] = 253)
+  {
+    for (int i = 0; i < 5; i++)
+    {
+      angle[i] = angle[i + 1];
+    }
+  }
+  finalAngle = (float)angle[5] / 1000000.0 + (float)angle[4] / 100000.0 + (float)angle[3] / 10000.0 + (float)angle[2] / 1000.0 + (float)angle[1] / 100.0 + angle[0] / 10.0;
+  Serial.println("\n");
+  Serial.println("Angle Float: ");
+  Serial.print(finalAngle);
+  Serial.println("\n");
+  Serial.print("Distance received: ");
+  for (int i = 0; i < 6; i++)
+  {
+    dist[i] = uint8_t(instruction[i + 6]) - 48;
+    Serial.print(dist[i]);
+  }
+  finalDist = (float)dist[5] / 1000000.0 + (float)dist[4] / 100000.0 + (float)dist[3] / 10000.0 + (float)dist[2] / 1000.0 + (float)dist[1] / 100.0 + dist[0] / 10.0;
+  Serial.println("\n");
+  Serial.println("Distance Float: ");
+  Serial.print(finalDist);
+  Serial.println("\n");
+  
+  if (abs(finalAngle) > 2*PI) {
+    finalAngle = NAN;
+  }
+
+  if (abs(finalDist) > 15) {
+    finalDist = NAN;
+  }
 }
 
-// CURRENTLY ASSUMES ONLY ONE INT OF DATA
-// STOPS WORKING AFTER 32 MESSAGES
-int PiCommunication::getInstruction()
-{
-  // for (int i = 0; i < sizeof(instruction); i++) {
-  //   Serial.print(instruction[i]);
-  // }
-  // Serial.print("\n");
-  return instruction[msgLength - 1];
-}
 
 // function called when an I2C interrupt event happens
 void PiCommunication::receive(int)
@@ -69,14 +92,10 @@ void PiCommunication::receive(int)
   }
 }
 
-// void PiCommunication::request()
-// {
-//   // According to the Wire source code, we must call write() within the requesting ISR
-//   // and nowhere else. Otherwise, the timing does not work out. See line 238:
-//   // https://github.com/arduino/ArduinoCore-avr/blob/master/libraries/Wire/src/Wire.cpp
-//   uint8_t localReply = reply;
-//   localReply += 100;
-//   Serial.print(localReply);
-//   Wire.write(localReply);
-//   reply = 0;
-// }
+float PiCommunication::getAngle() {
+  return finalAngle;
+}
+
+float PiCommunication::getDistance() {
+  return finalDist;
+}

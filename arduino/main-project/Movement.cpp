@@ -6,8 +6,7 @@
 #include "Arduino.h"
 #include "Movement.h"
 
-// MotorControl mc(0);
-// PositionMath pos;
+const float circleTimeRadiusIsh = 1.7;
 
 float forwardVel;
 float rotationalVel;
@@ -19,6 +18,7 @@ float xTarget;
 float yTarget;
 float rhoTarget;
 float phiTarget;
+float radiusTarget;
 
 float va;
 float dv;
@@ -48,8 +48,8 @@ float KP_VEL_OUTER = 4;
 float KI_VEL_OUTER = 0.12;
 
 // DV - spin in circle
-float KP_SPIN_INNER = 5;
-float KP_SPIN_OUTER = 5;
+float KP_SPIN_INNER = 6;
+float KP_SPIN_OUTER = 3;
 float KI_SPIN_OUTER = 0.2;
 
 // max speed of robot, m/s
@@ -80,19 +80,19 @@ float Movement::getXYError()
     return sqrt(pow(xErr, 2) + pow(yErr, 2));
 }
 
-
-
 float Movement::getPhiError()
 {
-    return pos.getPhi() - phiTarget;
+    return calculatePhiError(pos.getPhi(), phiTarget);
 }
 
 // move robot in circle around coordinates (x, y) with radius r
 void Movement::goInCircle(float x, float y, float r)
 {
+    forwardVelTarget = 0.5;
     mode = CIRCLE_TIME;
     xTarget = x;
     yTarget = y;
+    radiusTarget = r;
 }
 
 // move robot straight forward a set distance (meters)
@@ -111,15 +111,11 @@ void Movement::rotateLeft(float angle)
     phiTarget = angle;
     xTarget = pos.getX();
     yTarget = pos.getY();
-
-    
-    Serial.println("PHI TARGET IS " + (String)phiTarget);
 }
 
 // doesn't work
 void Movement::moveAtSpeed(float leftSpeed, float rightSpeed)
 {
-
 }
 
 void Movement::stop()
@@ -142,13 +138,9 @@ void Movement::updateMovement(float numMilliseconds)
     {
     case GO_TO_COORDINATES:
         rhoTarget = sqrt(pow(xTarget, 2) + pow(yTarget, 2));
-        
-        //phiActual = fmod(phiActual, 2*PI);
-        phiTarget = atan2(yTarget - pos.getY(), xTarget - pos.getX());
 
-        // TODO: phiTarget is always (-pi/2, pi/2)
-        // phi can be much greater
-        // robot should be able to turn in circles
+        // phiActual = fmod(phiActual, 2*PI);
+        phiTarget = atan2(yTarget - pos.getY(), xTarget - pos.getX());
 
         va = velOuterIntegralControl(rhoActual, rhoTarget, forwardVel, numMilliseconds);
         dv = angularVelOuterIntegralControl(phiActual, phiTarget, rotationalVel, numMilliseconds);
@@ -167,8 +159,8 @@ void Movement::updateMovement(float numMilliseconds)
         break;
 
     case CIRCLE_TIME:
-        va = velInnerProportionalControl(forwardVel, 0.5);
-        dv = angularVelInnerProportionalControl(rotationalVel, 0.5);
+        va = velInnerProportionalControl(forwardVel, forwardVelTarget);
+        dv = angularVelInnerProportionalControl(rotationalVel, forwardVelTarget / circleTimeRadiusIsh);
 
     case NO_FEEDBACK_CONTROLS:
         break;
@@ -245,7 +237,7 @@ float Movement::velInnerProportionalControl(float vel_actual, float vel_desired)
 float Movement::angularVelOuterIntegralControl(float phi, float phi_desired, float angularVel, int millisecondInterval)
 {
     // PI block
-    float angularVelPosError = phi_desired - phi; // radians
+    float angularVelPosError = calculatePhiError(phi, phi_desired); // radians
 
     angularVelIntegralError = angularVelIntegralError + angularVelPosError * (float)millisecondInterval / 1000.0; // radians * seconds
 
@@ -357,8 +349,42 @@ float Movement::getYTarget()
     return yTarget;
 }
 
-
 float Movement::getPhiTarget()
 {
     return phiTarget;
+}
+
+float Movement::calculatePhiError(float phi, float phiDes)
+{
+
+    // normalize to range (0, 2PI)
+    phi = fmod(phi, 2 * PI);
+    phiDes = fmod(phiDes, 2 * PI);
+
+    if (phi < 0)
+        phi += 2 * PI;
+    if (phiDes < 0)
+        phiDes += 2 * PI;
+
+    // test 4 cases for which one is < PI
+
+    // phi - phiDes
+    if (abs(phiDes - phi) < PI)
+    {
+        return phiDes - phi;
+    }
+
+    // (phi - 180*) - phiDes
+    if (abs((phiDes - 2 * PI) - phi) < PI)
+    {
+        return (phiDes - 2 * PI) - phi;
+    }
+
+    // phi - (phiDes - 180)
+    if (abs(phiDes - (phi - 2 * PI)) < PI)
+    {
+        return phiDes - (phi - 2 * PI);
+    }
+
+    return NAN;
 }
