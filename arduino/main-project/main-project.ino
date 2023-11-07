@@ -122,7 +122,7 @@ String stateToString(DEMO_2_STATE state)
 }
 
 // demo2 temp variables
-DEMO_2_STATE demo2State = SET_STOP_2;
+DEMO_2_STATE demo2State = RESET_STATE;
 const int testMode = 2;
 long waitTimerMs = 0;
 
@@ -200,6 +200,7 @@ void loop()
 
       motorController.updateMotorValues(20);
       movement.updateMovement(20);
+      piCommunication.updatePi(20);
       position.updatePosition(20, motorController.getLeftVelocity(), motorController.getRightVelocity());
     }
 

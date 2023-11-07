@@ -14,6 +14,8 @@ class PiCommunication {
     
         void begin();
 
+        void updatePi(int numMillis);
+
         void printReceived();
         void receive(int);
         float getAngle();

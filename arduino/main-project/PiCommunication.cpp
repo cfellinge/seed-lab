@@ -31,39 +31,53 @@ void PiCommunication::begin()
   // Wire.onRequest(request);
 }
 
+void PiCommunication::updatePi(int numMillis) {
+  // If there is data on the buffer, read it
+  if (msgLength > 0) {
+    // Serial.println("PRINT RECEIVED:");
+    // printReceived();
+    msgLength = 0;
+  }
+}
+
 // printReceived helps us see what data we are getting from the leader
 // interrupt
 void PiCommunication::printReceived()
 {
-  Serial.print("Offset received: ");
-  Serial.println(offset);
-  Serial.print("Message Length: ");
-  Serial.println(msgLength);
+  Serial.print("SendArray: "); 
+  for (int i=0;i<msgLength;i++) {
+    Serial.print(instruction[i]);
+    Serial.print(" ");
+   }
+  Serial.print("\n"); 
   Serial.print("Angle received: ");
-  for (int i = 0; i < 6; i++)
-  {
+  for (int i=0;i<6;i++) {
     angle[i] = uint8_t(instruction[i]) - 48;
     Serial.print(angle[i]);
+    Serial.print(" ");
+   }
+  if(angle[0] == 253){
+    finalAngle = -((float)angle[1] + (float)angle[3]/10.0 + (float)angle[4]/100.0 + (float)angle[5]/1000.0);
   }
-  if (angle[0] = 253)
-  {
-    for (int i = 0; i < 5; i++)
-    {
-      angle[i] = angle[i + 1];
-    }
+  else{
+   finalAngle = (float)angle[0] + (float)angle[2]/10.0 + (float)angle[3]/100.0 + (float)angle[4]/1000.0 + (float)angle[5]/10000.0;
   }
-  finalAngle = (float)angle[5] / 1000000.0 + (float)angle[4] / 100000.0 + (float)angle[3] / 10000.0 + (float)angle[2] / 1000.0 + (float)angle[1] / 100.0 + angle[0] / 10.0;
-  Serial.println("\n");
-  Serial.println("Angle Float: ");
-  Serial.print(finalAngle);
+   Serial.println("\n");
+   Serial.println("Angle Float: ");
+   Serial.print(finalAngle);
   Serial.println("\n");
   Serial.print("Distance received: ");
-  for (int i = 0; i < 6; i++)
-  {
-    dist[i] = uint8_t(instruction[i + 6]) - 48;
+  for (int i=0;i<6;i++) {
+    dist[i] = uint8_t(instruction[i+6]) - 48;
     Serial.print(dist[i]);
+   }
+    if(dist[0] == 253){
+    finalDist = -((float)dist[1] + (float)dist[3]/10.0 + (float)dist[4]/100.0 + (float)dist[5]/1000.0);
   }
-  finalDist = (float)dist[5] / 1000000.0 + (float)dist[4] / 100000.0 + (float)dist[3] / 10000.0 + (float)dist[2] / 1000.0 + (float)dist[1] / 100.0 + dist[0] / 10.0;
+  else{
+   finalDist = (float)dist[0] + (float)dist[2]/10.0 + (float)dist[3]/100.0 + (float)dist[4]/1000.0 + (float)dist[5]/10000.0;
+  }
+   
   Serial.println("\n");
   Serial.println("Distance Float: ");
   Serial.print(finalDist);
