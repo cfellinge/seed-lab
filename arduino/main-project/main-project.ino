@@ -122,7 +122,7 @@ String stateToString(DEMO_2_STATE state)
 }
 
 // demo2 temp variables
-DEMO_2_STATE demo2State = RESET_STATE;
+DEMO_2_STATE demo2State = SET_STOP_2;
 const int testMode = 2;
 long waitTimerMs = 0;
 
@@ -182,37 +182,9 @@ void loop()
   // 100 Hz max. frequency
   if (lastCount != count)
   {
-    // taskLED makes sure we don't get stuck inside a function
-    taskLED.onLED();
 
-    // increment time variables and set lastCount = count
-    millisecondsSinceStartup += 10;
-    secondsSinceStartup = millisecondsSinceStartup / 1000;
-    lastCount = count;
-
-    // 50 Hz
-    // update all objects
-    if (count % 2 == 0)
-    {
-      // get angle and distance from pi
-      pi_distance = piCommunication.getDistance();
-      pi_angle = piCommunication.getAngle();
-
-      motorController.updateMotorValues(20);
-      movement.updateMovement(20);
-      position.updatePosition(20, motorController.getLeftVelocity(), motorController.getRightVelocity());
-    }
-
-    // 50 Hz
-    // FSM
-    if (count % 2 == 1)
-    {
-      fsmUpdate();
-    }
-
-    // 4 Hz
-    // Blink clock LED
-    if (count % 25 == 1)
+    // do four times a second
+    if (count % 25 == 0)
     {
       // LED Blink
       clockLED.toggleLED();
@@ -290,6 +262,7 @@ void fsmUpdate()
   case SET_STOP_2:
     waitTimerMs = millisecondsSinceStartup + 2000;
     movement.stop();
+    Serial.println("Go to wait stop 2");
     demo2State = WAIT_STOP_2;
     break;
 
@@ -331,13 +304,13 @@ void fsmUpdate()
     break;
 
   case CIRCLE_TIME:
-    if ((millisecondsSinceStartup >= waitTimerMs) && (abs(movement.calculatePhiError(position.getPhi(), phiTargetFSM)) <= 0.2))
+    if ((millisecondsSinceStartup >= waitTimerMs) && (abs(movement.calculatePhiError(position.getPhi(), phiTargetFSM)) <= 0.05))
     {
       Serial.println("Phi goal: " + (String)phiTargetFSM + ", Actual phi: " + (String)position.getPhi());
       movement.stop();
       waitTimerMs = 0;
       movement.moveToCoordinates(xTargetFSM, yTargetFSM, 0);
-      demo2State = CIRCLE_FUDGE;
+      demo2State = TEST_2_DONE;
     }
     break;
 
@@ -431,5 +404,6 @@ void rightPinInterrupt()
 
 void piCommsInterrupt(int howMany)
 {
+  
   piCommunication.receive(howMany);
 }
