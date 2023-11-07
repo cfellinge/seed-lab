@@ -122,14 +122,14 @@ String stateToString(DEMO_2_STATE state)
 }
 
 // demo2 temp variables
-DEMO_2_STATE demo2State = RESET_STATE;
+DEMO_2_STATE demo2State = SET_STOP_2;
 const int testMode = 2;
 long waitTimerMs = 0;
 
 // raw Pi radians input
-float pi_angle = -1000;
+float pi_angle = NAN;
 // raw Pi meters input
-float pi_distance = -1000;
+float pi_distance = NAN;
 
 float xTargetFSM;
 float yTargetFSM;
@@ -337,7 +337,7 @@ void fsmUpdate()
       movement.stop();
       waitTimerMs = 0;
       movement.moveToCoordinates(xTargetFSM, yTargetFSM, 0);
-      demo2State = CIRCLE_FUDGE;
+      demo2State = RESET_STATE;
     }
     break;
 
