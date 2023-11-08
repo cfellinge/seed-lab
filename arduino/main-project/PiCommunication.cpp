@@ -34,7 +34,7 @@ void PiCommunication::begin()
 void PiCommunication::updatePi(int numMillis) {
   // If there is data on the buffer, read it
   if (msgLength > 0) {
-    // Serial.println("PRINT RECEIVED:");
+    Serial.print("PRINT RECEIVED:");
     printReceived();
     msgLength = 0;
   }
@@ -46,17 +46,17 @@ void PiCommunication::printReceived()
 {
   // Serial.print("SendArray: "); 
   for (int i=0;i<msgLength;i++) {
-    // Serial.print(instruction[i]);
-    // Serial.print(" ");
+    Serial.print(instruction[i]);
+    Serial.print(" ");
    }
-  // Serial.print("\n"); 
+  Serial.print("\n"); 
   // Serial.print("Angle received: ");
   for (int i=0;i<6;i++) {
     angle[i] = uint8_t(instruction[i]) - 48;
     // Serial.print(angle[i]);
     // Serial.print(" ");
    }
-  if(angle[0] != 253){
+  if(angle[0] == 253){
     finalAngle = -((float)angle[1] + (float)angle[3]/10.0 + (float)angle[4]/100.0 + (float)angle[5]/1000.0);
   }
   else{

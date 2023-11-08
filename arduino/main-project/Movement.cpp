@@ -398,3 +398,38 @@ float Movement::calculatePhiError(float phi, float phiDes)
 
     return NAN;
 }
+
+float Movement::calculatePhiError(float phi, float phiDes)
+{
+
+    // normalize to range (0, 2PI)
+    phi = fmod(phi, 2 * PI);
+    phiDes = fmod(phiDes, 2 * PI);
+
+    if (phi < 0)
+        phi += 2 * PI;
+    if (phiDes < 0)
+        phiDes += 2 * PI;
+
+    // test 4 cases for which one is < PI
+
+    // phi - phiDes
+    if (abs(phiDes - phi) < PI)
+    {
+        return phiDes - phi;
+    }
+
+    // (phi - 180*) - phiDes
+    if (abs((phiDes - 2 * PI) - phi) < PI)
+    {
+        return (phiDes - 2 * PI) - phi;
+    }
+
+    // phi - (phiDes - 180)
+    if (abs(phiDes - (phi - 2 * PI)) < PI)
+    {
+        return phiDes - (phi - 2 * PI);
+    }
+
+    return NAN;
+}

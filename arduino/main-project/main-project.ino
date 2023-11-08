@@ -54,9 +54,12 @@ enum DEMO_2_STATE
   WAIT_BUTTON_PRESS,
   WAIT_STOP_0,
   ACQUIRE_SIGNAL,
+  WAIT_ACQUIRE_SIGNAL,
+  SET_SPIN_2_ZERO,
   SPIN_2_ZERO,
   WAIT_STOP_1,
   SET_STOP_1,
+  SET_GO_TO_COORDS,
   GO_TO_COORDS,
   SET_STOP_2,
   WAIT_STOP_2,
@@ -84,6 +87,12 @@ String stateToString(DEMO_2_STATE state)
     break;
   case ACQUIRE_SIGNAL:
     return "ACQUIRE SIGNAL";
+    break;
+  case WAIT_ACQUIRE_SIGNAL:
+    return "WAITING AFTER ACQUIRED SIGNAL";
+    break;
+  case SET_SPIN_2_ZERO:
+    return "SET SPIN TO ZERO";
     break;
   case SPIN_2_ZERO:
     return "SPIN TO ZERO";
@@ -275,7 +284,9 @@ void fsmUpdate()
   case ACQUIRE_SIGNAL:
     if ((pi_angle < 100) && (pi_distance < 100))
     {
-      demo2State = SPIN_2_ZERO;
+      demo2State = WAIT_ACQUIRE_SIGNAL;
+      waitTimerMs = millisecondsSinceStartup + 1000;
+      movement.stop();
       taskLED.offLED();
     }
     else
@@ -285,15 +296,36 @@ void fsmUpdate()
     }
     break;
 
+  case WAIT_ACQUIRE_SIGNAL:
+    if (millisecondsSinceStartup >= waitTimerMs)
+    {
+      waitTimerMs = 0;
+      demo2State = SET_SPIN_2_ZERO;
+      taskLED.onLED();
+    }
+    break;
+
+  case SET_SPIN_2_ZERO:
+    if (pi_angle < 100)
+    {
+      phiTargetFSM = position.getPhi() + pi_angle;
+      movement.rotateLeft(phiTargetFSM);
+      demo2State = SPIN_2_ZERO;
+    }
+    break;
+
   case SPIN_2_ZERO:
-    if (abs(pi_angle) < 0.01)
+    if (abs(pi_angle) < 0.05)
     {
       demo2State = SET_STOP_1;
     }
-    else if (pi_angle < 100)
+    else if (abs(movement.calculatePhiError(phiTargetFSM, position.getPhi())) < 0.01)
     {
       // turn left quickly
-      movement.rotateLeft(position.getPhi() + pi_angle);
+      demo2State = SET_SPIN_2_ZERO;
+    }
+    else if (!(pi_distance < 100)) {
+      demo2State = ACQUIRE_SIGNAL;
     }
     break;
 
@@ -311,20 +343,32 @@ void fsmUpdate()
     }
     break;
 
-  case GO_TO_COORDS:
-    if (pi_distance < 0.01)
-    {
-      demo2State = SET_STOP_2;
-    }
-    // go to (x, y) given by pi
-
-    if (pi_distance < 100 && pi_angle < 100)
+  case SET_GO_TO_COORDS:
+    if (pi_distance < 100)
     {
       xTargetFSM = position.getX() + pi_distance * cos(position.getPhi() + pi_angle);
       yTargetFSM = position.getY() + pi_distance * sin(position.getPhi() + pi_angle);
+      movement.moveToCoordinates(xTargetFSM, yTargetFSM, 0);
+      waitTimerMs = millisecondsSinceStartup + 500;
+      demo2State = GO_TO_COORDS;
     }
+    break;
 
-    movement.moveToCoordinates(xTargetFSM, yTargetFSM, 0);
+  case GO_TO_COORDS:
+    if (abs(pi_distance) < 0.01)
+    {
+      demo2State = SET_STOP_2;
+    }
+    else if (movement.getXYError() < 0.01) //fix this
+    {
+      demo2State = SET_GO_TO_COORDS;
+    }
+    else if (waitTimerMs == millisecondsSinceStartup) {
+      demo2State = SET_GO_TO_COORDS;
+    }
+    else if (!(pi_distance < 100)) {
+      demo2State = ACQUIRE_SIGNAL;
+    }
     break;
 
   case SET_STOP_2:
