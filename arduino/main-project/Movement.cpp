@@ -34,7 +34,8 @@ enum MODE
     ROTATE_TO_ANGLE,
     STAY_STILL,
     NO_FEEDBACK_CONTROLS,
-    CIRCLE_TIME
+    CIRCLE_TIME,
+    ROTATE_AT_SPEED
 };
 
 MODE mode;
@@ -118,6 +119,11 @@ void Movement::moveAtSpeed(float leftSpeed, float rightSpeed)
 {
 }
 
+void Movement::rotateAtSpeed(float rotationalSpeed) {
+    mode = ROTATE_AT_SPEED;
+    rotationalVelTarget = rotationalSpeed;
+}
+
 void Movement::stop()
 {
     mode = STAY_STILL;
@@ -160,7 +166,11 @@ void Movement::updateMovement(float numMilliseconds)
 
     case CIRCLE_TIME:
         va = velInnerProportionalControl(forwardVel, forwardVelTarget);
-        dv = angularVelInnerProportionalControl(rotationalVel, forwardVelTarget / circleTimeRadiusIsh);
+        dv = angularVelInnerProportionalControl(rotationalVel, forwardVelTarget / radiusTarget);
+
+    case ROTATE_AT_SPEED:
+        va = velInnerProportionalControl(forwardVel, 0);
+        dv = angularVelInnerProportionalControl(rotationalVel, rotationalVelTarget);
 
     case NO_FEEDBACK_CONTROLS:
         break;

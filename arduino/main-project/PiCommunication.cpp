@@ -35,7 +35,7 @@ void PiCommunication::updatePi(int numMillis) {
   // If there is data on the buffer, read it
   if (msgLength > 0) {
     // Serial.println("PRINT RECEIVED:");
-    // printReceived();
+    printReceived();
     msgLength = 0;
   }
 }
@@ -44,32 +44,32 @@ void PiCommunication::updatePi(int numMillis) {
 // interrupt
 void PiCommunication::printReceived()
 {
-  Serial.print("SendArray: "); 
+  // Serial.print("SendArray: "); 
   for (int i=0;i<msgLength;i++) {
-    Serial.print(instruction[i]);
-    Serial.print(" ");
+    // Serial.print(instruction[i]);
+    // Serial.print(" ");
    }
-  Serial.print("\n"); 
-  Serial.print("Angle received: ");
+  // Serial.print("\n"); 
+  // Serial.print("Angle received: ");
   for (int i=0;i<6;i++) {
     angle[i] = uint8_t(instruction[i]) - 48;
-    Serial.print(angle[i]);
-    Serial.print(" ");
+    // Serial.print(angle[i]);
+    // Serial.print(" ");
    }
-  if(angle[0] == 253){
+  if(angle[0] != 253){
     finalAngle = -((float)angle[1] + (float)angle[3]/10.0 + (float)angle[4]/100.0 + (float)angle[5]/1000.0);
   }
   else{
    finalAngle = (float)angle[0] + (float)angle[2]/10.0 + (float)angle[3]/100.0 + (float)angle[4]/1000.0 + (float)angle[5]/10000.0;
   }
-   Serial.println("\n");
-   Serial.println("Angle Float: ");
-   Serial.print(finalAngle);
-  Serial.println("\n");
-  Serial.print("Distance received: ");
+  //  Serial.println("\n");
+  //  Serial.println("Angle Float: ");
+  //  Serial.print(finalAngle);
+  // Serial.println("\n");
+  // Serial.print("Distance received: ");
   for (int i=0;i<6;i++) {
     dist[i] = uint8_t(instruction[i+6]) - 48;
-    Serial.print(dist[i]);
+    // Serial.print(dist[i]);
    }
     if(dist[0] == 253){
     finalDist = -((float)dist[1] + (float)dist[3]/10.0 + (float)dist[4]/100.0 + (float)dist[5]/1000.0);
@@ -78,10 +78,10 @@ void PiCommunication::printReceived()
    finalDist = (float)dist[0] + (float)dist[2]/10.0 + (float)dist[3]/100.0 + (float)dist[4]/1000.0 + (float)dist[5]/10000.0;
   }
    
-  Serial.println("\n");
-  Serial.println("Distance Float: ");
-  Serial.print(finalDist);
-  Serial.println("\n");
+  // Serial.println("\n");
+  // Serial.println("Distance Float: ");
+  // Serial.print(finalDist);
+  // Serial.println("\n");
   
   if (abs(finalAngle) > 2*PI) {
     finalAngle = NAN;

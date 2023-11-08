@@ -29,6 +29,8 @@ public:
     // move motors forward at a constant speed (meters / second)
     void moveAtSpeed(float leftSpeed, float rightSpeed);
 
+    void rotateAtSpeed(float rotationalSpeed);
+
     void stop();
 
     void updateMovement(float numMilliseconds);

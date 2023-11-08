@@ -21,6 +21,9 @@ byte timerReloadValue = 0x9C;
 int motorEncoderLeftA = 2;
 int motorEncoderRightA = 3;
 
+// reset button pin
+const int BUTTON_PIN = A3;
+
 // misc variables
 long millisecondsSinceStartup = 0;
 int secondsSinceStartup = 0;
@@ -48,6 +51,8 @@ PiCommunication piCommunication;
 enum DEMO_2_STATE
 {
   RESET_STATE,
+  WAIT_BUTTON_PRESS,
+  WAIT_STOP_0,
   ACQUIRE_SIGNAL,
   SPIN_2_ZERO,
   WAIT_STOP_1,
@@ -70,6 +75,12 @@ String stateToString(DEMO_2_STATE state)
   {
   case RESET_STATE:
     return "RESET STATE";
+    break;
+  case WAIT_BUTTON_PRESS:
+    return "WAIT FOR BUTTON PRESS";
+    break;
+  case WAIT_STOP_0:
+    return "WAIT STOP 0";
     break;
   case ACQUIRE_SIGNAL:
     return "ACQUIRE SIGNAL";
@@ -173,6 +184,8 @@ void setup()
 
   Serial.println("Pi Communication initialized");
 
+  pinMode(BUTTON_PIN, INPUT);
+
   Serial.println("Beginning main loop:");
   Serial.println("--------------------------------------------------------------------------");
 }
@@ -236,18 +249,39 @@ void fsmUpdate()
   switch (demo2State)
   {
   case RESET_STATE:
-    demo2State = ACQUIRE_SIGNAL;
+    demo2State = WAIT_BUTTON_PRESS;
+    movement.stop();
+    break;
+
+  case WAIT_BUTTON_PRESS:
+    if (analogRead(BUTTON_PIN) > 500)
+    {
+      waitTimerMs = millisecondsSinceStartup + 1000;
+      demo2State = WAIT_STOP_0;
+    }
+    else
+    {
+      movement.stop();
+    }
+    break;
+
+  case WAIT_STOP_0:
+    if (millisecondsSinceStartup >= waitTimerMs)
+    {
+      waitTimerMs = 0;
+      demo2State = ACQUIRE_SIGNAL;
+    }
     break;
 
   case ACQUIRE_SIGNAL:
-    if (pi_angle != NAN)
+    if ((pi_angle < 100) && (pi_distance < 100))
     {
       demo2State = SPIN_2_ZERO;
     }
     else
     {
       // turn left quickly
-      movement.rotateLeft(position.getPhi() + PI / 2);
+      movement.rotateAtSpeed(0.38);
     }
     break;
 
@@ -256,7 +290,7 @@ void fsmUpdate()
     {
       demo2State = SET_STOP_1;
     }
-    else
+    else if (pi_angle < 100)
     {
       // turn left quickly
       movement.rotateLeft(position.getPhi() + pi_angle);
@@ -283,8 +317,13 @@ void fsmUpdate()
       demo2State = SET_STOP_2;
     }
     // go to (x, y) given by pi
-    xTargetFSM = position.getX() + pi_distance * cos(position.getPhi() + pi_angle);
-    yTargetFSM = position.getY() + pi_distance * sin(position.getPhi() + pi_angle);
+
+    if (pi_distance < 100 && pi_angle < 100)
+    {
+      xTargetFSM = position.getX() + pi_distance * cos(position.getPhi() + pi_angle);
+      yTargetFSM = position.getY() + pi_distance * sin(position.getPhi() + pi_angle);
+    }
+
     movement.moveToCoordinates(xTargetFSM, yTargetFSM, 0);
     break;
 
