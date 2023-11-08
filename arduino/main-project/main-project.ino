@@ -196,7 +196,6 @@ void loop()
   if (lastCount != count)
   {
     // taskLED makes sure we don't get stuck inside a function
-    taskLED.onLED();
 
     // increment time variables and set lastCount = count
     millisecondsSinceStartup += 10;
@@ -238,7 +237,6 @@ void loop()
     {
       printDebugStatements();
     }
-    taskLED.offLED();
   }
 }
 
@@ -270,6 +268,7 @@ void fsmUpdate()
     {
       waitTimerMs = 0;
       demo2State = ACQUIRE_SIGNAL;
+      taskLED.onLED();
     }
     break;
 
@@ -277,6 +276,7 @@ void fsmUpdate()
     if ((pi_angle < 100) && (pi_distance < 100))
     {
       demo2State = SPIN_2_ZERO;
+      taskLED.offLED();
     }
     else
     {
