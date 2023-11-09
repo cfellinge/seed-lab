@@ -383,13 +383,13 @@ float Movement::calculatePhiError(float phi, float phiDes)
         return phiDes - phi;
     }
 
-    // (phi - 180*) - phiDes
+    // (phi - 360*) - phiDes
     if (abs((phiDes - 2 * PI) - phi) < PI)
     {
         return (phiDes - 2 * PI) - phi;
     }
 
-    // phi - (phiDes - 180)
+    // phi - (phiDes - 360*)
     if (abs(phiDes - (phi - 2 * PI)) < PI)
     {
         return phiDes - (phi - 2 * PI);
