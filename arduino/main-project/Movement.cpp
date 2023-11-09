@@ -77,7 +77,7 @@ void Movement::moveToCoordinates(float x, float y, float phi)
 float Movement::getXYError()
 {
     float xErr = pos.getX() - xTarget;
-    float yErr = pos.getY() - xTarget;
+    float yErr = pos.getY() - yTarget;
     return sqrt(pow(xErr, 2) + pow(yErr, 2));
 }
 
@@ -143,12 +143,11 @@ void Movement::updateMovement(float numMilliseconds)
     switch (mode)
     {
     case GO_TO_COORDINATES:
-        rhoTarget = sqrt(pow(xTarget, 2) + pow(yTarget, 2));
-
+        rhoTarget = getXYError();
         // phiActual = fmod(phiActual, 2*PI);
         phiTarget = atan2(yTarget - pos.getY(), xTarget - pos.getX());
 
-        va = velOuterIntegralControl(rhoActual, rhoTarget, forwardVel, numMilliseconds);
+        va = velOuterIntegralControl(rhoTarget, 0, forwardVel, numMilliseconds);
         dv = angularVelOuterIntegralControl(phiActual, phiTarget, rotationalVel, numMilliseconds);
         break;
 
@@ -362,41 +361,6 @@ float Movement::getYTarget()
 float Movement::getPhiTarget()
 {
     return phiTarget;
-}
-
-float Movement::calculatePhiError(float phi, float phiDes)
-{
-
-    // normalize to range (0, 2PI)
-    phi = fmod(phi, 2 * PI);
-    phiDes = fmod(phiDes, 2 * PI);
-
-    if (phi < 0)
-        phi += 2 * PI;
-    if (phiDes < 0)
-        phiDes += 2 * PI;
-
-    // test 4 cases for which one is < PI
-
-    // phi - phiDes
-    if (abs(phiDes - phi) < PI)
-    {
-        return phiDes - phi;
-    }
-
-    // (phi - 180*) - phiDes
-    if (abs((phiDes - 2 * PI) - phi) < PI)
-    {
-        return (phiDes - 2 * PI) - phi;
-    }
-
-    // phi - (phiDes - 180)
-    if (abs(phiDes - (phi - 2 * PI)) < PI)
-    {
-        return phiDes - (phi - 2 * PI);
-    }
-
-    return NAN;
 }
 
 float Movement::calculatePhiError(float phi, float phiDes)

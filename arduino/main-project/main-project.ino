@@ -282,7 +282,7 @@ void fsmUpdate()
     break;
 
   case ACQUIRE_SIGNAL:
-    if ((pi_angle < 100) && (pi_distance < 100))
+    if (!isnan(pi_angle))
     {
       demo2State = WAIT_ACQUIRE_SIGNAL;
       waitTimerMs = millisecondsSinceStartup + 1000;
@@ -306,7 +306,7 @@ void fsmUpdate()
     break;
 
   case SET_SPIN_2_ZERO:
-    if (pi_angle < 100)
+    if (!isnan(pi_angle))
     {
       phiTargetFSM = position.getPhi() + pi_angle;
       movement.rotateLeft(phiTargetFSM);
@@ -315,16 +315,20 @@ void fsmUpdate()
     break;
 
   case SPIN_2_ZERO:
-    if (abs(pi_angle) < 0.05)
+    if (abs(movement.calculatePhiError(phiTargetFSM, position.getPhi())) < 0.01)
     {
-      demo2State = SET_STOP_1;
+      if (abs(pi_angle) < 0.05)
+      {
+        demo2State = SET_STOP_1;
+      }
+      else
+      {
+        waitTimerMs = millisecondsSinceStartup + 1000;
+        demo2State = WAIT_ACQUIRE_SIGNAL;
+      }
     }
-    else if (abs(movement.calculatePhiError(phiTargetFSM, position.getPhi())) < 0.01)
+    else if (isnan(pi_angle))
     {
-      // turn left quickly
-      demo2State = SET_SPIN_2_ZERO;
-    }
-    else if (!(pi_distance < 100)) {
       demo2State = ACQUIRE_SIGNAL;
     }
     break;
@@ -332,6 +336,8 @@ void fsmUpdate()
   case SET_STOP_1:
     waitTimerMs = millisecondsSinceStartup + 2000;
     movement.stop();
+    // demo2State = WAIT_STOP_1;
+    //  debugging:
     demo2State = WAIT_STOP_1;
     break;
 
@@ -344,10 +350,11 @@ void fsmUpdate()
     break;
 
   case SET_GO_TO_COORDS:
-    if (pi_distance < 100)
+    if (!isnan(pi_distance))
     {
       xTargetFSM = position.getX() + pi_distance * cos(position.getPhi() + pi_angle);
       yTargetFSM = position.getY() + pi_distance * sin(position.getPhi() + pi_angle);
+
       movement.moveToCoordinates(xTargetFSM, yTargetFSM, 0);
       waitTimerMs = millisecondsSinceStartup + 500;
       demo2State = GO_TO_COORDS;
@@ -359,16 +366,18 @@ void fsmUpdate()
     {
       demo2State = SET_STOP_2;
     }
-    else if (movement.getXYError() < 0.01) //fix this
+    else if (movement.getXYError() < 0.01) // fix this
     {
       demo2State = SET_GO_TO_COORDS;
     }
-    else if (waitTimerMs == millisecondsSinceStartup) {
+    else if (waitTimerMs == millisecondsSinceStartup)
+    {
       demo2State = SET_GO_TO_COORDS;
     }
-    else if (!(pi_distance < 100)) {
-      demo2State = ACQUIRE_SIGNAL;
-    }
+    // else if (!(pi_distance < 100))
+    // {
+    //   demo2State = ACQUIRE_SIGNAL;
+    // }
     break;
 
   case SET_STOP_2:
@@ -406,10 +415,10 @@ void fsmUpdate()
     break;
 
   case START_CIRCLE_TIME:
-    movement.goInCircle(xTargetFSM, yTargetFSM, 0);
     xTargetFSM = position.getX();
     yTargetFSM = position.getY();
     phiTargetFSM = position.getPhi();
+    movement.goInCircle(xTargetFSM, yTargetFSM, 0);
     waitTimerMs = millisecondsSinceStartup + 2000;
     demo2State = CIRCLE_TIME;
     break;
@@ -474,7 +483,7 @@ void printDebugStatements()
   // Serial.println("Left Voltage: " + (String)((float)motorController.getLeftWriteValue() / 255.0 * 8.0) + ", Right Voltage: " + (String)((float)motorController.getRightWriteValue() / 255.0 * 8.0));
 
   // X, Y, PHI
-  Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", rho: " + (String)(position.getRho()) + ", phi: " + (String)(position.getPhi() / PI) + " pi");
+  // Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", rho: " + (String)(position.getRho()) + ", phi: " + (String)(position.getPhi() / PI) + " pi");
 
   // FSM Targets
   Serial.println("FSM - X Target: " + (String)xTargetFSM + ", Y target: " + (String)yTargetFSM + ", Phi target: " + (String)phiTargetFSM);
@@ -486,7 +495,7 @@ void printDebugStatements()
   // Serial.println("VA: " + (String)movement.getVA() + ", DV: " + (String)movement.getDV());
 
   // RHO, PHI TARGETS
-  // Serial.println("MVT - Rho goal: " + (String)movement.getRhoTarget() + ", Phi goal: " + (String)(movement.getPhiTarget() / PI) + " pi");
+  Serial.println("MVT - Rho goal: " + (String)movement.getRhoTarget() + ", Phi goal: " + (String)(movement.getPhiTarget() / PI) + " pi");
 
   // X, Y TARGETS
   // Serial.println("MVT - X Target: " + (String)movement.getXTarget() + ", Y target: " + (String)(movement.getYTarget()));
