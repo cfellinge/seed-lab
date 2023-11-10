@@ -317,7 +317,7 @@ void fsmUpdate()
   case SPIN_2_ZERO:
     if (abs(movement.calculatePhiError(phiTargetFSM, position.getPhi())) < 0.01)
     {
-      if (abs(pi_angle) < 0.05)
+      if (abs(pi_angle) < 0.1)
       {
         demo2State = SET_STOP_1;
       }
@@ -344,7 +344,7 @@ void fsmUpdate()
   case WAIT_STOP_1:
     if (millisecondsSinceStartup >= waitTimerMs)
     {
-      //waitTimerMs = 250;
+      waitTimerMs = 250;
       demo2State = SET_GO_TO_COORDS;
     }
     break;
