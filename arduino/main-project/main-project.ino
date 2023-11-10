@@ -344,7 +344,7 @@ void fsmUpdate()
   case SET_SPIN_2_ZERO:
     if (!isnan(pi_angle))
     {
-      phiTargetFSM = position.getPhi() + pi_angle / 4 ;
+      phiTargetFSM = position.getPhi() + pi_angle / 3;
       movement.rotateLeft(phiTargetFSM);
       demo2State = SPIN_2_ZERO;
       Serial.println("PhiTargetFSM " + (String)phiTargetFSM);
@@ -354,7 +354,7 @@ void fsmUpdate()
   case SPIN_2_ZERO:
     if (abs(movement.calculatePhiError(phiTargetFSM, position.getPhi())) < 0.2)
     {
-      if (abs(pi_angle) < 0.1)
+      if (abs(pi_angle) < 0.2)
       {
         demo2State = SET_STOP_1;
       }
@@ -389,8 +389,8 @@ void fsmUpdate()
   case SET_GO_TO_COORDS:
     if (!isnan(pi_distance))
     {
-      xTargetFSM = position.getX() + pi_distance * cos(position.getPhi() + pi_angle);
-      yTargetFSM = position.getY() + pi_distance * sin(position.getPhi() + pi_angle);
+      xTargetFSM = position.getX() + (pi_distance + 0.9) * cos(position.getPhi() + pi_angle);
+      yTargetFSM = position.getY() + (pi_distance + 0.9) * sin(position.getPhi() + pi_angle);
       //Serial.println("Set x to " + (String)xTargetFSM + ", set y to " + (String)yTargetFSM);
 
       movement.moveToCoordinates(xTargetFSM, yTargetFSM, 0);
@@ -414,7 +414,7 @@ void fsmUpdate()
     break;
 
   case SET_STOP_2:
-    waitTimerMs = millisecondsSinceStartup + 2000;
+    waitTimerMs = millisecondsSinceStartup + 250;
     movement.stop();
     demo2State = WAIT_STOP_2;
     break;
@@ -452,7 +452,7 @@ void fsmUpdate()
     yTargetFSM = position.getY();
     phiTargetFSM = position.getPhi();
 
-    movement.goInCircle(xTargetFSM, yTargetFSM, 1.5);
+    movement.goInCircle(xTargetFSM, yTargetFSM, 2.1);
 
     waitTimerMs = millisecondsSinceStartup + 6000;
     demo2State = CIRCLE_TIME;

@@ -87,7 +87,7 @@ float Movement::getPhiError()
 // move robot in circle around coordinates (x, y) with radius r
 void Movement::goInCircle(float x, float y, float r)
 {
-    forwardVelTarget = 0.5;
+    forwardVelTarget = 1.0;
     mode = CIRCLE_TIME;
     xTarget = x;
     yTarget = y;
