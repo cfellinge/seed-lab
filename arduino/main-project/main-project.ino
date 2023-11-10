@@ -272,38 +272,47 @@ void fsmUpdate()
     }
     break;
 
+  // case WAIT_STOP_0:
+  //   if (millisecondsSinceStartup >= waitTimerMs)
+  //   {
+  //     waitTimerMs = 0;
+  //     demo2State = ACQUIRE_SIGNAL;
+  //     taskLED.onLED();
+  //   }
+  //   break;
+
+  // case ACQUIRE_SIGNAL:
+  //   if (!isnan(pi_angle))
+  //   {
+  //     demo2State = WAIT_ACQUIRE_SIGNAL;
+  //     waitTimerMs = millisecondsSinceStartup + 100;
+  //     movement.stop();
+  //     taskLED.offLED();
+  //   }
+  //   else
+  //   {
+  //     // turn left quickly
+  //     movement.rotateAtSpeed(0.5);
+  //   }
+  //   break;
+
+  // case WAIT_ACQUIRE_SIGNAL:
+  //   if (millisecondsSinceStartup >= waitTimerMs)
+  //   {
+  //     waitTimerMs = 0;
+  //     demo2State = SET_SPIN_2_ZERO;
+  //     taskLED.onLED();
+  //   }
+  //   break;
+
   case WAIT_STOP_0:
-    if (millisecondsSinceStartup >= waitTimerMs)
-    {
+    if (millisecondsSinceStartup >= waitTimerMs) {
       waitTimerMs = 0;
       demo2State = ACQUIRE_SIGNAL;
-      taskLED.onLED();
+      movement.rotateLeft(position.getPhi() + PI / 6);
+      demo2State = ACQUIRE_SIGNAL;
     }
-    break;
 
-  case ACQUIRE_SIGNAL:
-    if (!isnan(pi_angle))
-    {
-      demo2State = WAIT_ACQUIRE_SIGNAL;
-      waitTimerMs = millisecondsSinceStartup + 100;
-      movement.stop();
-      taskLED.offLED();
-    }
-    else
-    {
-      // turn left quickly
-      movement.rotateAtSpeed(0.5);
-    }
-    break;
-
-  case WAIT_ACQUIRE_SIGNAL:
-    if (millisecondsSinceStartup >= waitTimerMs)
-    {
-      waitTimerMs = 0;
-      demo2State = SET_SPIN_2_ZERO;
-      taskLED.onLED();
-    }
-    break;
 
   case SET_SPIN_2_ZERO:
     if (!isnan(pi_angle))
