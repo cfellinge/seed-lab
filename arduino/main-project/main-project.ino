@@ -292,7 +292,7 @@ void fsmUpdate()
     else
     {
       // turn left quickly
-      movement.rotateAtSpeed(0.38);
+      movement.rotateAtSpeed(0.5);
     }
     break;
 
@@ -344,7 +344,7 @@ void fsmUpdate()
   case WAIT_STOP_1:
     if (millisecondsSinceStartup >= waitTimerMs)
     {
-      waitTimerMs = 250;
+      //waitTimerMs = 250;
       demo2State = SET_GO_TO_COORDS;
     }
     break;
@@ -354,7 +354,7 @@ void fsmUpdate()
     {
       xTargetFSM = position.getX() + pi_distance * cos(position.getPhi() + pi_angle);
       yTargetFSM = position.getY() + pi_distance * sin(position.getPhi() + pi_angle);
-      Serial.println("Set x to " + (String)xTargetFSM + ", set y to " + (String)yTargetFSM);
+      //Serial.println("Set x to " + (String)xTargetFSM + ", set y to " + (String)yTargetFSM);
 
       movement.moveToCoordinates(xTargetFSM, yTargetFSM, 0);
       demo2State = GO_TO_COORDS;
@@ -415,7 +415,7 @@ void fsmUpdate()
     yTargetFSM = position.getY();
     phiTargetFSM = position.getPhi();
 
-    movement.goInCircle(xTargetFSM, yTargetFSM, 1.9);
+    movement.goInCircle(xTargetFSM, yTargetFSM, 2.4);
 
     waitTimerMs = millisecondsSinceStartup + 6000;
     demo2State = CIRCLE_TIME;
