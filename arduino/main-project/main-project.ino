@@ -52,9 +52,12 @@ enum DEMO_2_STATE
 {
   RESET_STATE,
   WAIT_BUTTON_PRESS,
-  WAIT_STOP_0,
-  ACQUIRE_SIGNAL,
-  WAIT_ACQUIRE_SIGNAL,
+  SET_SPIN_30,
+  SPIN_30,
+  CHECK_PI,
+  //WAIT_STOP_0,
+  //ACQUIRE_SIGNAL,
+  //WAIT_ACQUIRE_SIGNAL,
   SET_SPIN_2_ZERO,
   SPIN_2_ZERO,
   WAIT_STOP_1,
@@ -82,14 +85,23 @@ String stateToString(DEMO_2_STATE state)
   case WAIT_BUTTON_PRESS:
     return "WAIT FOR BUTTON PRESS";
     break;
-  case WAIT_STOP_0:
-    return "WAIT STOP 0";
+  // case WAIT_STOP_0:
+  //   return "WAIT STOP 0";
+  //   break;
+  // case ACQUIRE_SIGNAL:
+  //   return "ACQUIRE SIGNAL";
+  //   break;
+  // case WAIT_ACQUIRE_SIGNAL:
+  //   return "WAITING AFTER ACQUIRED SIGNAL";
+  //   break;
+  case SET_SPIN_30:
+    return "SET SPIN 30";
     break;
-  case ACQUIRE_SIGNAL:
-    return "ACQUIRE SIGNAL";
+  case SPIN_30:
+    return "SPIN 30";
     break;
-  case WAIT_ACQUIRE_SIGNAL:
-    return "WAITING AFTER ACQUIRED SIGNAL";
+  case CHECK_PI:
+    return "CHECK PI";
     break;
   case SET_SPIN_2_ZERO:
     return "SET SPIN TO ZERO";
@@ -264,7 +276,7 @@ void fsmUpdate()
     if (analogRead(BUTTON_PIN) > 500)
     {
       waitTimerMs = millisecondsSinceStartup + 100;
-      demo2State = WAIT_STOP_0;
+      demo2State = SET_SPIN_30;
     }
     else
     {
@@ -305,14 +317,41 @@ void fsmUpdate()
   //   }
   //   break;
 
-  case WAIT_STOP_0:
-    if (millisecondsSinceStartup >= waitTimerMs) {
-      waitTimerMs = 0;
-      demo2State = ACQUIRE_SIGNAL;
-      movement.rotateLeft(position.getPhi() + PI / 6);
-      demo2State = ACQUIRE_SIGNAL;
+  case SET_SPIN_30:
+    if (!isnan(pi_angle))
+    {
+      phiTargetFSM = position.getPhi() + pi_angle;
+      movement.rotateLeft(phiTargetFSM);
+      demo2State = SPIN_2_ZERO;
     }
+    movement.rotateLeft(position.getPhi() + PI / 6);
+    demo2State = SPIN_30;
+    break;
 
+  case SPIN_30:
+    if (!isnan(pi_angle))
+    {
+      phiTargetFSM = position.getPhi() + pi_angle;
+      movement.rotateLeft(phiTargetFSM);
+      demo2State = SPIN_2_ZERO;
+    }
+    if (abs(movement.getPhiError()) < 0.05) {
+      movement.stop();
+      waitTimerMs = millisecondsSinceStartup + 350;
+      demo2State = CHECK_PI;
+    }
+    break;
+
+  case CHECK_PI:
+    if (!isnan(pi_angle)) {
+      waitTimerMs = 0;
+      demo2State = SET_SPIN_2_ZERO;
+    }
+    else if (millisecondsSinceStartup >= waitTimerMs) {
+      waitTimerMs = 0;
+      demo2State = SET_SPIN_30;
+    }
+  break;
 
   case SET_SPIN_2_ZERO:
     if (!isnan(pi_angle))
@@ -324,7 +363,7 @@ void fsmUpdate()
     break;
 
   case SPIN_2_ZERO:
-    if (abs(movement.calculatePhiError(phiTargetFSM, position.getPhi())) < 0.01)
+    if (abs(movement.calculatePhiError(phiTargetFSM, position.getPhi())) < 0.05)
     {
       if (abs(pi_angle) < 0.05)
       {
@@ -333,12 +372,12 @@ void fsmUpdate()
       else
       {
         waitTimerMs = millisecondsSinceStartup + 100;
-        demo2State = WAIT_ACQUIRE_SIGNAL;
+        demo2State = SET_SPIN_30;
       }
     }
     else if (isnan(pi_angle))
     {
-      demo2State = ACQUIRE_SIGNAL;
+      demo2State = SET_SPIN_30;
     }
     break;
 
