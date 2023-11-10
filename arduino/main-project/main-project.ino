@@ -318,26 +318,14 @@ void fsmUpdate()
   //   break;
 
   case SET_SPIN_30:
-    if (!isnan(pi_angle))
-    {
-      phiTargetFSM = position.getPhi() + pi_angle;
-      movement.rotateLeft(phiTargetFSM);
-      demo2State = SPIN_2_ZERO;
-    }
     movement.rotateLeft(position.getPhi() + PI / 6);
     demo2State = SPIN_30;
     break;
 
   case SPIN_30:
-    if (!isnan(pi_angle))
-    {
-      phiTargetFSM = position.getPhi() + pi_angle;
-      movement.rotateLeft(phiTargetFSM);
-      demo2State = SPIN_2_ZERO;
-    }
     if (abs(movement.getPhiError()) < 0.05) {
       movement.stop();
-      waitTimerMs = millisecondsSinceStartup + 350;
+      waitTimerMs = millisecondsSinceStartup + 750;
       demo2State = CHECK_PI;
     }
     break;
@@ -356,14 +344,15 @@ void fsmUpdate()
   case SET_SPIN_2_ZERO:
     if (!isnan(pi_angle))
     {
-      phiTargetFSM = position.getPhi() + pi_angle;
+      phiTargetFSM = position.getPhi() + pi_angle / 4 ;
       movement.rotateLeft(phiTargetFSM);
       demo2State = SPIN_2_ZERO;
+      Serial.println("PhiTargetFSM " + (String)phiTargetFSM);
     }
     break;
 
   case SPIN_2_ZERO:
-    if (abs(movement.calculatePhiError(phiTargetFSM, position.getPhi())) < 0.05)
+    if (abs(movement.calculatePhiError(phiTargetFSM, position.getPhi())) < 0.2)
     {
       if (abs(pi_angle) < 0.1)
       {
@@ -372,13 +361,13 @@ void fsmUpdate()
       else
       {
         waitTimerMs = millisecondsSinceStartup + 100;
-        demo2State = SET_SPIN_30;
+        demo2State = SET_SPIN_2_ZERO;
       }
     }
-    else if (isnan(pi_angle))
-    {
-      demo2State = SET_SPIN_30;
-    }
+    // else if (isnan(pi_angle))
+    // {
+    //   demo2State = SET_SPIN_30;
+    // }
     break;
 
   case SET_STOP_1:
@@ -463,7 +452,7 @@ void fsmUpdate()
     yTargetFSM = position.getY();
     phiTargetFSM = position.getPhi();
 
-    movement.goInCircle(xTargetFSM, yTargetFSM, 2.4);
+    movement.goInCircle(xTargetFSM, yTargetFSM, 1.5);
 
     waitTimerMs = millisecondsSinceStartup + 6000;
     demo2State = CIRCLE_TIME;
@@ -536,7 +525,7 @@ void printDebugStatements()
   // Serial.println("Left pos: " + (String)(motorController.getLeftPosition() / PI) + " pi, Right pos: " + (String)(motorController.getRightPosition() / PI) + " pi");
 
   // VA, DV
-  Serial.println("VA: " + (String)movement.getVA() + ", DV: " + (String)movement.getDV());
+  //Serial.println("VA: " + (String)movement.getVA() + ", DV: " + (String)movement.getDV());
 
   // RHO, PHI TARGETS
   // Serial.println("MVT - Rho goal: " + (String)movement.getRhoTarget() + ", Phi goal: " + (String)(movement.getPhiTarget() / PI) + " pi");
@@ -551,7 +540,7 @@ void printDebugStatements()
   // Serial.println("Pi distance: " + (String)pi_distance + " meters, Pi angle: " + (String)(pi_angle / PI) + " pi");
 
   // XY Error
-  Serial.println("XY Error: " + (String)movement.getXYError());
+  //Serial.println("XY Error: " + (String)movement.getXYError());
 
   // STATE
   // Serial.println("State: " + stateToString(demo2State));

@@ -52,7 +52,7 @@ float KP_SPIN_OUTER = 3;
 float KI_SPIN_OUTER = 0.2;
 
 // max speed of robot, m/s
-float ROBOT_MAX_SPEED = 0.9;
+float ROBOT_MAX_SPEED = 1.5;
 
 // max rotational velocity of robot, rad/s
 float ROBOT_MAX_SPIN = 0.8;
