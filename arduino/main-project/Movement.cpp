@@ -6,8 +6,6 @@
 #include "Arduino.h"
 #include "Movement.h"
 
-const float circleTimeRadiusIsh = 1.7;
-
 float forwardVel;
 float rotationalVel;
 
@@ -147,7 +145,7 @@ void Movement::updateMovement(float numMilliseconds)
         // phiActual = fmod(phiActual, 2*PI);
         phiTarget = atan2(yTarget - pos.getY(), xTarget - pos.getX());
 
-        va = velOuterIntegralControl(rhoTarget, 0, forwardVel, numMilliseconds);
+        va = velOuterIntegralControl(0, rhoTarget, forwardVel, numMilliseconds);
         dv = angularVelOuterIntegralControl(phiActual, phiTarget, rotationalVel, numMilliseconds);
         break;
 
@@ -164,12 +162,15 @@ void Movement::updateMovement(float numMilliseconds)
         break;
 
     case CIRCLE_TIME:
+        Serial.println("Forward vel: " + (String)forwardVel + ", forwardVelTarget: " + (String)forwardVelTarget);
         va = velInnerProportionalControl(forwardVel, forwardVelTarget);
         dv = angularVelInnerProportionalControl(rotationalVel, forwardVelTarget / radiusTarget);
+        break;
 
     case ROTATE_AT_SPEED:
         va = velInnerProportionalControl(forwardVel, 0);
         dv = angularVelInnerProportionalControl(rotationalVel, rotationalVelTarget);
+        break;
 
     case NO_FEEDBACK_CONTROLS:
         break;

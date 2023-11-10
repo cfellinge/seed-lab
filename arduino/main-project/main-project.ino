@@ -263,7 +263,7 @@ void fsmUpdate()
   case WAIT_BUTTON_PRESS:
     if (analogRead(BUTTON_PIN) > 500)
     {
-      waitTimerMs = millisecondsSinceStartup + 1000;
+      waitTimerMs = millisecondsSinceStartup + 100;
       demo2State = WAIT_STOP_0;
     }
     else
@@ -285,7 +285,7 @@ void fsmUpdate()
     if (!isnan(pi_angle))
     {
       demo2State = WAIT_ACQUIRE_SIGNAL;
-      waitTimerMs = millisecondsSinceStartup + 1000;
+      waitTimerMs = millisecondsSinceStartup + 100;
       movement.stop();
       taskLED.offLED();
     }
@@ -323,7 +323,7 @@ void fsmUpdate()
       }
       else
       {
-        waitTimerMs = millisecondsSinceStartup + 1000;
+        waitTimerMs = millisecondsSinceStartup + 100;
         demo2State = WAIT_ACQUIRE_SIGNAL;
       }
     }
@@ -334,7 +334,7 @@ void fsmUpdate()
     break;
 
   case SET_STOP_1:
-    waitTimerMs = millisecondsSinceStartup + 2000;
+    waitTimerMs = millisecondsSinceStartup + 1000;
     movement.stop();
     // demo2State = WAIT_STOP_1;
     //  debugging:
@@ -344,8 +344,8 @@ void fsmUpdate()
   case WAIT_STOP_1:
     if (millisecondsSinceStartup >= waitTimerMs)
     {
-      waitTimerMs = 0;
-      demo2State = GO_TO_COORDS;
+      waitTimerMs = 250;
+      demo2State = SET_GO_TO_COORDS;
     }
     break;
 
@@ -354,25 +354,21 @@ void fsmUpdate()
     {
       xTargetFSM = position.getX() + pi_distance * cos(position.getPhi() + pi_angle);
       yTargetFSM = position.getY() + pi_distance * sin(position.getPhi() + pi_angle);
+      Serial.println("Set x to " + (String)xTargetFSM + ", set y to " + (String)yTargetFSM);
 
       movement.moveToCoordinates(xTargetFSM, yTargetFSM, 0);
-      waitTimerMs = millisecondsSinceStartup + 500;
       demo2State = GO_TO_COORDS;
     }
     break;
 
   case GO_TO_COORDS:
-    if (abs(pi_distance) < 0.01)
+    // if (abs(pi_distance) < 0.01)
+    // {
+    //   demo2State = SET_STOP_2;
+    // }
+    if (abs(movement.getXYError()) < 0.01) // fix this
     {
       demo2State = SET_STOP_2;
-    }
-    else if (movement.getXYError() < 0.01) // fix this
-    {
-      demo2State = SET_GO_TO_COORDS;
-    }
-    else if (waitTimerMs == millisecondsSinceStartup)
-    {
-      demo2State = SET_GO_TO_COORDS;
     }
     // else if (!(pi_distance < 100))
     // {
@@ -418,8 +414,10 @@ void fsmUpdate()
     xTargetFSM = position.getX();
     yTargetFSM = position.getY();
     phiTargetFSM = position.getPhi();
-    movement.goInCircle(xTargetFSM, yTargetFSM, 0);
-    waitTimerMs = millisecondsSinceStartup + 2000;
+
+    movement.goInCircle(xTargetFSM, yTargetFSM, 1.9);
+
+    waitTimerMs = millisecondsSinceStartup + 6000;
     demo2State = CIRCLE_TIME;
     break;
 
@@ -428,9 +426,7 @@ void fsmUpdate()
     {
       Serial.println("Phi goal: " + (String)phiTargetFSM + ", Actual phi: " + (String)position.getPhi());
       movement.stop();
-      waitTimerMs = 0;
-      movement.moveToCoordinates(xTargetFSM, yTargetFSM, 0);
-      demo2State = RESET_STATE;
+      demo2State = TEST_2_DONE;
     }
     break;
 
@@ -486,16 +482,16 @@ void printDebugStatements()
   // Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", rho: " + (String)(position.getRho()) + ", phi: " + (String)(position.getPhi() / PI) + " pi");
 
   // FSM Targets
-  Serial.println("FSM - X Target: " + (String)xTargetFSM + ", Y target: " + (String)yTargetFSM + ", Phi target: " + (String)phiTargetFSM);
+  // Serial.println("FSM - X Target: " + (String)xTargetFSM + ", Y target: " + (String)yTargetFSM + ", Phi target: " + (String)phiTargetFSM);
 
   // WHEEL POSITIONS
   // Serial.println("Left pos: " + (String)(motorController.getLeftPosition() / PI) + " pi, Right pos: " + (String)(motorController.getRightPosition() / PI) + " pi");
 
   // VA, DV
-  // Serial.println("VA: " + (String)movement.getVA() + ", DV: " + (String)movement.getDV());
+  Serial.println("VA: " + (String)movement.getVA() + ", DV: " + (String)movement.getDV());
 
   // RHO, PHI TARGETS
-  Serial.println("MVT - Rho goal: " + (String)movement.getRhoTarget() + ", Phi goal: " + (String)(movement.getPhiTarget() / PI) + " pi");
+  // Serial.println("MVT - Rho goal: " + (String)movement.getRhoTarget() + ", Phi goal: " + (String)(movement.getPhiTarget() / PI) + " pi");
 
   // X, Y TARGETS
   // Serial.println("MVT - X Target: " + (String)movement.getXTarget() + ", Y target: " + (String)(movement.getYTarget()));
@@ -504,12 +500,15 @@ void printDebugStatements()
   // Serial.println("Forwards velocity: " + (String)movement.getForwardVel() + ", Rotational velocity: " + (String)movement.getRotationalVel());
 
   // RASPBERRY PI VALUES
-  Serial.println("Pi distance: " + (String)pi_distance + " meters, Pi angle: " + (String)(pi_angle / PI) + " pi");
+  // Serial.println("Pi distance: " + (String)pi_distance + " meters, Pi angle: " + (String)(pi_angle / PI) + " pi");
+
+  // XY Error
+  Serial.println("XY Error: " + (String)movement.getXYError());
 
   // STATE
-  Serial.println("State: " + stateToString(demo2State));
+  // Serial.println("State: " + stateToString(demo2State));
 
-  Serial.println();
+  // Serial.println();
 }
 
 void leftPinInterrupt()
