@@ -155,7 +155,7 @@ String stateToString(DEMO_2_STATE state)
 
 // demo2 temp variables
 DEMO_2_STATE demo2State = RESET_STATE;
-const int testMode = 2;
+const int testMode = 1;
 long waitTimerMs = 0;
 
 // raw Pi radians input
@@ -389,8 +389,8 @@ void fsmUpdate()
   case SET_GO_TO_COORDS:
     if (!isnan(pi_distance))
     {
-      xTargetFSM = position.getX() + (pi_distance + 0.9) * cos(position.getPhi() + pi_angle);
-      yTargetFSM = position.getY() + (pi_distance + 0.9) * sin(position.getPhi() + pi_angle);
+      xTargetFSM = position.getX() + (pi_distance + 0.09) * cos(position.getPhi() + pi_angle);
+      yTargetFSM = position.getY() + (pi_distance + 0.09) * sin(position.getPhi() + pi_angle);
       //Serial.println("Set x to " + (String)xTargetFSM + ", set y to " + (String)yTargetFSM);
 
       movement.moveToCoordinates(xTargetFSM, yTargetFSM, 0);
@@ -452,7 +452,7 @@ void fsmUpdate()
     yTargetFSM = position.getY();
     phiTargetFSM = position.getPhi();
 
-    movement.goInCircle(xTargetFSM, yTargetFSM, 2.1);
+    movement.goInCircle(xTargetFSM, yTargetFSM, 2.25);
 
     waitTimerMs = millisecondsSinceStartup + 6000;
     demo2State = CIRCLE_TIME;
