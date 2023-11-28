@@ -6,6 +6,21 @@
 #include "Arduino.h"
 #include "Movement.h"
 
+// VA - go zoom straight
+float KP_VEL_INNER = 6;
+float KP_VEL_OUTER = 4;
+float KI_VEL_OUTER = 0.12;
+
+// DV - spin in circle
+float KP_SPIN_INNER = 12;
+float KP_SPIN_OUTER = 2;
+float KI_SPIN_OUTER = 1.2;
+
+// max speed of robot, m/s
+float ROBOT_MAX_SPEED = 1.5;
+
+
+
 float forwardVel;
 float rotationalVel;
 
@@ -41,18 +56,6 @@ MODE mode;
 float velIntegralError = 0;
 float angularVelIntegralError = 0;
 
-// VA - go zoom straight
-float KP_VEL_INNER = 6;
-float KP_VEL_OUTER = 4;
-float KI_VEL_OUTER = 0.12;
-
-// DV - spin in circle
-float KP_SPIN_INNER = 6;
-float KP_SPIN_OUTER = 3;
-float KI_SPIN_OUTER = 0.2;
-
-// max speed of robot, m/s
-float ROBOT_MAX_SPEED = 1.5;
 
 // max rotational velocity of robot, rad/s
 float ROBOT_MAX_SPIN = 0.8;

@@ -78,10 +78,10 @@ String stateToString(DEMO_2_STATE state)
     return "WAIT FOR BUTTON PRESS";
     break;
   case SET_SPIN_180:
-    return "SET SPIN 30";
+    return "SET SPIN 180";
     break;
   case SPIN_180:
-    return "SPIN 30";
+    return "SPIN 180";
     break;
   case WAIT_STOP_1:
     return "WAIT STOP 1";
@@ -109,9 +109,6 @@ String stateToString(DEMO_2_STATE state)
     break;
   case TEST_1_DONE:
     return "TEST 1 DONE";
-    break;
-  case TEST_2_DONE:
-    return "TEST 2 DONE";
     break;
   default:
     return "";
@@ -251,7 +248,7 @@ void fsmUpdate()
     break;
 
   case SET_SPIN_180:
-    movement.rotateLeft(position.getPhi() + PI);
+    movement.rotateLeft(position.getPhi() + PI - 0.0001);
     demo2State = SPIN_180;
     break;
 
@@ -282,6 +279,7 @@ void fsmUpdate()
     yTargetFSM = 0;
 
     movement.moveToCoordinates(xTargetFSM, yTargetFSM, 0);
+    Serial.println("Set target to " + (String)xTargetFSM + ", " + (String)yTargetFSM);
     demo2State = GO_TO_COORDS_1;
 
     break;
@@ -307,7 +305,7 @@ void fsmUpdate()
     break;
 
   case START_SPIN_180_2:
-    phiTargetFSM = position.getPhi() - PI;
+    phiTargetFSM = position.getPhi() + PI - 0.0001;
     movement.rotateLeft(phiTargetFSM);
     demo2State = SPIN_180_2;
     break;
@@ -315,7 +313,7 @@ void fsmUpdate()
   case SPIN_180_2:
     if (abs(movement.getPhiError()) < 0.01)
     {
-      demo2State = SET_GO_TO_COORDS_1;
+      demo2State = SET_GO_TO_COORDS_2;
     }
     break;
 
@@ -324,6 +322,7 @@ void fsmUpdate()
     yTargetFSM = 0;
 
     movement.moveToCoordinates(xTargetFSM, yTargetFSM, 0);
+    Serial.println("Set target to " + (String)xTargetFSM + ", " + (String)yTargetFSM);
     demo2State = GO_TO_COORDS_2;
 
     break;
@@ -370,10 +369,10 @@ void printDebugStatements()
   // Serial.println("Left Voltage: " + (String)((float)motorController.getLeftWriteValue() / 255.0 * 8.0) + ", Right Voltage: " + (String)((float)motorController.getRightWriteValue() / 255.0 * 8.0));
 
   // X, Y, PHI
-  // Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", rho: " + (String)(position.getRho()) + ", phi: " + (String)(position.getPhi() / PI) + " pi");
+  Serial.println("x: " + (String)(position.getX()) + ", y: " + (String)(position.getY()) + ", rho: " + (String)(position.getRho()) + ", phi: " + (String)(position.getPhi() / PI) + " pi");
 
   // FSM Targets
-  // Serial.println("FSM - X Target: " + (String)xTargetFSM + ", Y target: " + (String)yTargetFSM + ", Phi target: " + (String)phiTargetFSM);
+  Serial.println("FSM - X Target: " + (String)xTargetFSM + ", Y target: " + (String)yTargetFSM + ", Phi target: " + (String)phiTargetFSM);
 
   // WHEEL POSITIONS
   // Serial.println("Left pos: " + (String)(motorController.getLeftPosition() / PI) + " pi, Right pos: " + (String)(motorController.getRightPosition() / PI) + " pi");
@@ -385,7 +384,7 @@ void printDebugStatements()
   // Serial.println("MVT - Rho goal: " + (String)movement.getRhoTarget() + ", Phi goal: " + (String)(movement.getPhiTarget() / PI) + " pi");
 
   // X, Y TARGETS
-  // Serial.println("MVT - X Target: " + (String)movement.getXTarget() + ", Y target: " + (String)(movement.getYTarget()));
+  Serial.println("MVT - X Target: " + (String)movement.getXTarget() + ", Y target: " + (String)(movement.getYTarget()));
 
   // FORWARD, ROTATIONAL VELOCITY
   // Serial.println("Forwards velocity: " + (String)movement.getForwardVel() + ", Rotational velocity: " + (String)movement.getRotationalVel());

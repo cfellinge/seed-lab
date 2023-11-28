@@ -51,10 +51,6 @@ int _motorMode;
 int _leftWriteValue;
 int _rightWriteValue;
 
-// PID Tuning Variables
-const float _KP = 9;
-const float _KI = 0.15;
-
 float _leftIntegralError;
 float _rightIntegralError;
 
