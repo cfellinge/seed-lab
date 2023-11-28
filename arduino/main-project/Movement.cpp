@@ -19,7 +19,8 @@ float KI_SPIN_OUTER = 1.2;
 // max speed of robot, m/s
 float ROBOT_MAX_SPEED = 1.5;
 
-
+// max rotational velocity of robot, rad/s
+float ROBOT_MAX_SPIN = 0.8;
 
 float forwardVel;
 float rotationalVel;
@@ -57,8 +58,7 @@ float velIntegralError = 0;
 float angularVelIntegralError = 0;
 
 
-// max rotational velocity of robot, rad/s
-float ROBOT_MAX_SPIN = 0.8;
+
 
 Movement::Movement(MotorControl &motorController, PositionMath &positionMath, float wheelRadius) : mc(motorController), pos(positionMath)
 {
