@@ -47,9 +47,9 @@ float KP_VEL_OUTER = 4;
 float KI_VEL_OUTER = 0.12;
 
 // DV - spin in circle
-float KP_SPIN_INNER = 6;
-float KP_SPIN_OUTER = 3;
-float KI_SPIN_OUTER = 0.2;
+float KP_SPIN_INNER = 12;
+float KP_SPIN_OUTER = 2;
+float KI_SPIN_OUTER = 1.2;
 
 // max speed of robot, m/s
 float ROBOT_MAX_SPEED = 1.5;
