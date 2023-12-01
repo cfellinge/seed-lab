@@ -55,17 +55,18 @@ enum DEMO_2_STATE
   SET_SPIN_30,
   SPIN_30,
   CHECK_PI,
-  //WAIT_STOP_0,
-  //ACQUIRE_SIGNAL,
-  //WAIT_ACQUIRE_SIGNAL,
   SET_SPIN_2_ZERO,
   SPIN_2_ZERO,
   WAIT_STOP_1,
   SET_STOP_1,
-  SET_GO_TO_COORDS,
-  GO_TO_COORDS,
+  SET_GO_TO_COORDS_1,
+  GO_TO_COORDS_1,
   SET_STOP_2,
   WAIT_STOP_2,
+  SET_GO_TO_COORDS_2,
+  GO_TO_COORDS_2,
+  SET_STOP_3,
+  WAIT_STOP_3,
   START_SPIN_90,
   SPIN_90,
   START_CIRCLE_TIME,
@@ -85,15 +86,6 @@ String stateToString(DEMO_2_STATE state)
   case WAIT_BUTTON_PRESS:
     return "WAIT FOR BUTTON PRESS";
     break;
-  // case WAIT_STOP_0:
-  //   return "WAIT STOP 0";
-  //   break;
-  // case ACQUIRE_SIGNAL:
-  //   return "ACQUIRE SIGNAL";
-  //   break;
-  // case WAIT_ACQUIRE_SIGNAL:
-  //   return "WAITING AFTER ACQUIRED SIGNAL";
-  //   break;
   case SET_SPIN_30:
     return "SET SPIN 30";
     break;
@@ -115,14 +107,29 @@ String stateToString(DEMO_2_STATE state)
   case SET_STOP_1:
     return "SET STOP 1";
     break;
-  case GO_TO_COORDS:
-    return "GO TO COORDS";
+  case SET_GO_TO_COORDS_1:
+    return "SET GO TO COORDS 1";
+    break;
+  case GO_TO_COORDS_1:
+    return "GO TO COORDS 1";
     break;
   case SET_STOP_2:
     return "SET STOP 2";
     break;
   case WAIT_STOP_2:
     return "WAIT STOP 2";
+    break;
+  case SET_GO_TO_COORDS_2:
+    return "SET GO TO COORDS 2";
+    break;
+  case GO_TO_COORDS_2:
+    return "GO TO COORDS 2";
+    break;
+  case SET_STOP_3:
+    return "SET STOP 3";
+    break;
+  case WAIT_STOP_3:
+    return "WAIT STOP 3";
     break;
   case START_SPIN_90:
     return "START SPIN 90";
@@ -155,7 +162,7 @@ String stateToString(DEMO_2_STATE state)
 
 // demo2 temp variables
 DEMO_2_STATE demo2State = RESET_STATE;
-const int testMode = 1;
+const int testMode = 2;
 long waitTimerMs = 0;
 
 // raw Pi radians input
@@ -284,67 +291,70 @@ void fsmUpdate()
     }
     break;
 
-  // case WAIT_STOP_0:
-  //   if (millisecondsSinceStartup >= waitTimerMs)
-  //   {
-  //     waitTimerMs = 0;
-  //     demo2State = ACQUIRE_SIGNAL;
-  //     taskLED.onLED();
-  //   }
-  //   break;
+    // case WAIT_STOP_0:
+    //   if (millisecondsSinceStartup >= waitTimerMs)
+    //   {
+    //     waitTimerMs = 0;
+    //     demo2State = ACQUIRE_SIGNAL;
+    //     taskLED.onLED();
+    //   }
+    //   break;
 
-  // case ACQUIRE_SIGNAL:
-  //   if (!isnan(pi_angle))
-  //   {
-  //     demo2State = WAIT_ACQUIRE_SIGNAL;
-  //     waitTimerMs = millisecondsSinceStartup + 100;
-  //     movement.stop();
-  //     taskLED.offLED();
-  //   }
-  //   else
-  //   {
-  //     // turn left quickly
-  //     movement.rotateAtSpeed(0.5);
-  //   }
-  //   break;
+    // case ACQUIRE_SIGNAL:
+    //   if (!isnan(pi_angle))
+    //   {
+    //     demo2State = WAIT_ACQUIRE_SIGNAL;
+    //     waitTimerMs = millisecondsSinceStartup + 100;
+    //     movement.stop();
+    //     taskLED.offLED();
+    //   }
+    //   else
+    //   {
+    //     // turn left quickly
+    //     movement.rotateAtSpeed(0.5);
+    //   }
+    //   break;
 
-  // case WAIT_ACQUIRE_SIGNAL:
-  //   if (millisecondsSinceStartup >= waitTimerMs)
-  //   {
-  //     waitTimerMs = 0;
-  //     demo2State = SET_SPIN_2_ZERO;
-  //     taskLED.onLED();
-  //   }
-  //   break;
+    // case WAIT_ACQUIRE_SIGNAL:
+    //   if (millisecondsSinceStartup >= waitTimerMs)
+    //   {
+    //     waitTimerMs = 0;
+    //     demo2State = SET_SPIN_2_ZERO;
+    //     taskLED.onLED();
+    //   }
+    //   break;
 
   case SET_SPIN_30:
-    movement.rotateLeft(position.getPhi() + PI / 6);
+    movement.rotateLeft(position.getPhi() + PI / 2.15);
     demo2State = SPIN_30;
     break;
 
   case SPIN_30:
-    if (abs(movement.getPhiError()) < 0.05) {
+    if (abs(movement.getPhiError()) < 0.01)
+    {
       movement.stop();
-      waitTimerMs = millisecondsSinceStartup + 750;
+      waitTimerMs = millisecondsSinceStartup + 1000;
       demo2State = CHECK_PI;
     }
     break;
 
   case CHECK_PI:
-    if (!isnan(pi_angle)) {
+    if (!isnan(pi_angle))
+    {
       waitTimerMs = 0;
       demo2State = SET_SPIN_2_ZERO;
     }
-    else if (millisecondsSinceStartup >= waitTimerMs) {
+    else if (millisecondsSinceStartup >= waitTimerMs)
+    {
       waitTimerMs = 0;
       demo2State = SET_SPIN_30;
     }
-  break;
+    break;
 
   case SET_SPIN_2_ZERO:
     if (!isnan(pi_angle))
     {
-      phiTargetFSM = position.getPhi() + pi_angle / 3;
+      phiTargetFSM = position.getPhi() + pi_angle / 4;
       movement.rotateLeft(phiTargetFSM);
       demo2State = SPIN_2_ZERO;
       Serial.println("PhiTargetFSM " + (String)phiTargetFSM);
@@ -364,62 +374,81 @@ void fsmUpdate()
         demo2State = SET_SPIN_2_ZERO;
       }
     }
-    // else if (isnan(pi_angle))
-    // {
-    //   demo2State = SET_SPIN_30;
-    // }
     break;
 
   case SET_STOP_1:
-    waitTimerMs = millisecondsSinceStartup + 1000;
+    waitTimerMs = millisecondsSinceStartup + 250;
     movement.stop();
-    // demo2State = WAIT_STOP_1;
-    //  debugging:
     demo2State = WAIT_STOP_1;
     break;
 
   case WAIT_STOP_1:
     if (millisecondsSinceStartup >= waitTimerMs)
     {
-      waitTimerMs = 250;
-      demo2State = SET_GO_TO_COORDS;
+      waitTimerMs = 0;
+      demo2State = SET_GO_TO_COORDS_1;
     }
     break;
 
-  case SET_GO_TO_COORDS:
+  case SET_GO_TO_COORDS_1:
     if (!isnan(pi_distance))
     {
-      xTargetFSM = position.getX() + (pi_distance + 0.09) * cos(position.getPhi() + pi_angle);
-      yTargetFSM = position.getY() + (pi_distance + 0.09) * sin(position.getPhi() + pi_angle);
-      //Serial.println("Set x to " + (String)xTargetFSM + ", set y to " + (String)yTargetFSM);
+      xTargetFSM = position.getX() + (pi_distance * 0.66) * cos(position.getPhi() + pi_angle);
+      yTargetFSM = position.getY() + (pi_distance * 0.66) * sin(position.getPhi() + pi_angle);
+      // Serial.println("Set x to " + (String)xTargetFSM + ", set y to " + (String)yTargetFSM);
 
       movement.moveToCoordinates(xTargetFSM, yTargetFSM, 0);
-      demo2State = GO_TO_COORDS;
+      demo2State = GO_TO_COORDS_1;
     }
     break;
 
-  case GO_TO_COORDS:
-    // if (abs(pi_distance) < 0.01)
-    // {
-    //   demo2State = SET_STOP_2;
-    // }
+  case GO_TO_COORDS_1:
     if (abs(movement.getXYError()) < 0.01) // fix this
     {
       demo2State = SET_STOP_2;
     }
-    // else if (!(pi_distance < 100))
-    // {
-    //   demo2State = ACQUIRE_SIGNAL;
-    // }
     break;
 
   case SET_STOP_2:
-    waitTimerMs = millisecondsSinceStartup + 250;
+    waitTimerMs = millisecondsSinceStartup + 500;
     movement.stop();
     demo2State = WAIT_STOP_2;
     break;
 
   case WAIT_STOP_2:
+    if (millisecondsSinceStartup >= waitTimerMs)
+    {
+      waitTimerMs = 0;
+      demo2State = SET_GO_TO_COORDS_2;
+    }
+    break;
+
+  case SET_GO_TO_COORDS_2:
+    if (!isnan(pi_distance))
+    {
+      xTargetFSM = position.getX() + (pi_distance)*cos(position.getPhi() + pi_angle);
+      yTargetFSM = position.getY() + (pi_distance)*sin(position.getPhi() + pi_angle);
+      // Serial.println("Set x to " + (String)xTargetFSM + ", set y to " + (String)yTargetFSM);
+
+      movement.moveToCoordinates(xTargetFSM, yTargetFSM, 0);
+      demo2State = GO_TO_COORDS_2;
+    }
+    break;
+
+  case GO_TO_COORDS_2:
+    if (abs(movement.getXYError()) < 0.01) // fix this
+    {
+      demo2State = SET_STOP_3;
+    }
+    break;
+
+  case SET_STOP_3:
+    waitTimerMs = millisecondsSinceStartup + 750;
+    movement.stop();
+    demo2State = WAIT_STOP_3;
+    break;
+
+  case WAIT_STOP_3:
     if (millisecondsSinceStartup >= waitTimerMs)
     {
       waitTimerMs = 0;
@@ -452,7 +481,7 @@ void fsmUpdate()
     yTargetFSM = position.getY();
     phiTargetFSM = position.getPhi();
 
-    movement.goInCircle(xTargetFSM, yTargetFSM, 2.25);
+    movement.goInCircle(xTargetFSM, yTargetFSM, 4.75);
 
     waitTimerMs = millisecondsSinceStartup + 6000;
     demo2State = CIRCLE_TIME;
@@ -525,22 +554,22 @@ void printDebugStatements()
   // Serial.println("Left pos: " + (String)(motorController.getLeftPosition() / PI) + " pi, Right pos: " + (String)(motorController.getRightPosition() / PI) + " pi");
 
   // VA, DV
-  //Serial.println("VA: " + (String)movement.getVA() + ", DV: " + (String)movement.getDV());
+  // Serial.println("VA: " + (String)movement.getVA() + ", DV: " + (String)movement.getDV());
 
   // RHO, PHI TARGETS
   // Serial.println("MVT - Rho goal: " + (String)movement.getRhoTarget() + ", Phi goal: " + (String)(movement.getPhiTarget() / PI) + " pi");
 
   // X, Y TARGETS
-  // Serial.println("MVT - X Target: " + (String)movement.getXTarget() + ", Y target: " + (String)(movement.getYTarget()));
+  Serial.println("MVT - X Target: " + (String)movement.getXTarget() + ", Y target: " + (String)(movement.getYTarget()));
 
   // FORWARD, ROTATIONAL VELOCITY
   // Serial.println("Forwards velocity: " + (String)movement.getForwardVel() + ", Rotational velocity: " + (String)movement.getRotationalVel());
 
   // RASPBERRY PI VALUES
-  // Serial.println("Pi distance: " + (String)pi_distance + " meters, Pi angle: " + (String)(pi_angle / PI) + " pi");
+  Serial.println("Pi distance: " + (String)pi_distance + " meters, Pi angle: " + (String)(pi_angle / PI) + " pi");
 
   // XY Error
-  //Serial.println("XY Error: " + (String)movement.getXYError());
+  // Serial.println("XY Error: " + (String)movement.getXYError());
 
   // STATE
   // Serial.println("State: " + stateToString(demo2State));
